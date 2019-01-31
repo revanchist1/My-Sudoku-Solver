@@ -4,6 +4,10 @@
 
 import numpy as np
 import math
+import os 
+
+def cls():
+    os.system('cls' if os.name=='nt' else 'clear')
 
 # Overall strategy:
 # Create a cell object  
@@ -78,18 +82,51 @@ class grid:
                 print(mid_row)
         print(bot_row)
         
+    def explain_exclusions(self, cell, impossible_values, celltype):
+        for num in impossible_values:
+            try:
+                cell.possible_values.remove(num)
+                
+                string = ''
+                if celltype == 'row':
+                    string = str(cell.row)
+                elif celltype == 'col':
+                    string = str(cell.col)
+                elif celltype == 'box':
+                    string = str(cell.box)
+                
+                print('Cannot be ' + str(num) + ' because it is already in ' + celltype + ' # ' + string)
+                print('Possible values: ' + str(cell.possible_values))
+            except ValueError: 
+                continue
+            
     def iterate(self):
         # Loops through each unsolved cell in the game board, and tries to solve.
         for cell in self.unsolved_cells:
-            row = self.rows[cell.row-1]
-            col = self.cols[cell.col-1]
-            box = self.boxes[cell.box-1]
             
             print('Now trying to solve cell: ' + str(cell.cell_id))
             print('Starting possible values: ' + str(cell.possible_values))
-            print('#s already in row: ' + str(row.impossible_values))
-            print('#s already in col: ' + str(col.impossible_values))
-            print('#s already in box: ' + str(box.impossible_values))     
+            
+            # easier to understand code if I give the impossible values names
+            nums_in_row = self.rows[cell.row-1].impossible_values
+            nums_in_col = self.cols[cell.col-1].impossible_values
+            nums_in_box = self.boxes[cell.box-1].impossible_values
+
+            self.explain_exclusions(cell, nums_in_row, 'row')
+            self.explain_exclusions(cell, nums_in_col, 'col')
+            self.explain_exclusions(cell, nums_in_box, 'box')
+            # If only 1 possible number, set cell value as that, and update row, col, and box possibilities, and remove from solved cells. 
+            # otherwise, continue
+            
+            if len(cell.possible_values) == 1:
+                print('Solved this cell') # input logic to deal with correct cell later. 
+            else:
+                print('Unable to solve during this iteration, continuing to next empty cell!')
+                input('Press enter to continue')
+                cls()
+                self.print_grid()
+                    
+            
             
             # Since the more populated a row, grid, or column is, the more information  
             # it provides on a first run, I should dynamically go through them. But that optimization 
