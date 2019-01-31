@@ -47,6 +47,7 @@ class grid:
         self.rows = []
         self.cols = []
         self.boxes = []
+        self.unsolved_cells[]
     
     def print_grid(self):
         top_row = '┌─────────┬─────────┬─────────┐'
@@ -96,7 +97,8 @@ def process_starting_input(inp):
             curr_cell.value =inp[i-1,j-1]
             if np.isnan(curr_cell.value) == False:
                 curr_cell.possible_values = []
-                curr_cell.impossible_values = []
+                curr_cell.impossible_values = [] 
+            the_grid.unsolved_cells.append(curr_cell)
             the_grid.rows[i-1].cells.append(curr_cell)
             the_grid.cols[j-1].cells.append(curr_cell)
             the_grid.boxes[curr_cell.box-1].cells.append(curr_cell)
@@ -119,6 +121,3 @@ game_grid = process_starting_input(input_grid)
 game_grid.print_grid()
 
 # Step 1 - simple logic: For each cell in each row, check row, column and grid, and exclude possibilities. If only 1 left after all 3 checks, assign value, update, and show plot. 
-
-# Okay. I need a function to iterate over each cell, and check the possible values based on what is in the row, box, and column. 
-
