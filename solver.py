@@ -29,16 +29,19 @@ class row:
     def __init__(self):
         self.position = np.nan  # ranges from 1-9, top to bottom 
         self.cells = []
+        self.possible_values = []
 
 class col: 
     def __init__(self):         # ranges from 1-9, left to right 
         self.position = np.nan 
         self.cells = []
+        self.possible_values = []
         
 class box:
     def __init__(self):
         self.position = np.nan # ranges from 1-9, 1 2 3 | 4 5 6| 7 8 9 
         self.cells = []
+        self.possible_values = []
         
 class grid:
     def __init__(self):
@@ -73,7 +76,27 @@ class grid:
             if (i == 2 or i == 5):
                 print(mid_row)
         print(bot_row)
-
+        
+    def iterate(self):
+        # Loops through each unsolved cell in the game board, and tries to solve.
+        for cell in self.unsolved_cells:
+            row = cell.row 
+            col = cell.col 
+            box = cell.box
+            
+            print('Now trying to solve cell: ' + str(cell.cell_id))
+            print('Starting possible values: ' + str(cell.possible_values))
+            
+            print(row)
+            print(col)
+            print(box)
+            
+            # Since the more populated a row, grid, or column is, the more information  
+            # it provides on a first run, I should dynamically go through them. But that optimization 
+            # can come later. 
+            
+            
+    
 def initialize_grid(brd):
     # Fill the grid with row, column, and boxes 
     for i in range(1,10):
@@ -120,5 +143,6 @@ input_grid = np.array([[n,n,8,2,n,n,9,n,3],
     
 game_grid = process_starting_input(input_grid)
 game_grid.print_grid()
+game_grid.iterate()
 
 # Step 1 - simple logic: For each cell in each row, check row, column and grid, and exclude possibilities. If only 1 left after all 3 checks, assign value, update, and show plot. 
