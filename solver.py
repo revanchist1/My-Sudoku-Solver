@@ -29,19 +29,19 @@ class row:
     def __init__(self):
         self.position = np.nan  # ranges from 1-9, top to bottom 
         self.cells = []
-        self.possible_values = []
+        self.possible_values = [1,2,3,4,5,6,7,8,9]
 
 class col: 
     def __init__(self):         # ranges from 1-9, left to right 
         self.position = np.nan 
         self.cells = []
-        self.possible_values = []
+        self.possible_values = [1,2,3,4,5,6,7,8,9]
         
 class box:
     def __init__(self):
         self.position = np.nan # ranges from 1-9, 1 2 3 | 4 5 6| 7 8 9 
         self.cells = []
-        self.possible_values = []
+        self.possible_values = [1,2,3,4,5,6,7,8,9]
         
 class grid:
     def __init__(self):
@@ -95,8 +95,6 @@ class grid:
             # it provides on a first run, I should dynamically go through them. But that optimization 
             # can come later. 
             
-            
-    
 def initialize_grid(brd):
     # Fill the grid with row, column, and boxes 
     for i in range(1,10):
@@ -121,6 +119,9 @@ def process_starting_input(inp):
             if np.isnan(curr_cell.value) == False: # If the cell has a value 
                 curr_cell.possible_values = []
                 curr_cell.impossible_values = [] 
+                the_grid.rows[i-1].possible_values.remove(curr_cell.value)
+                the_grid.cols[j-1].possible_values.remove(curr_cell.value)
+                the_grid.boxes[curr_cell.box-1].possible_values.remove(curr_cell.value)
             else:
                 the_grid.unsolved_cells.append(curr_cell) # Use this list to track empty cells to allow faster iteration
             the_grid.rows[i-1].cells.append(curr_cell)
