@@ -1,4 +1,4 @@
-# Sudoku solver version 0.1 
+# Sudoku solver version 0.2
 # Created by Soren Sabet Sarvestany based on strategies learned while playing sudoku
 # 01-13-2019 1:28 AM
 
@@ -25,23 +25,24 @@ class cell:
         self.box = np.nan # Box number, ranges from 1-9 as defined below 
         self.cell_id = (row,col)
 
+# Row, col, and box are essentially the same class. I can simplify the code by only using one class for these 3. 
 class row: 
     def __init__(self):
         self.position = np.nan  # ranges from 1-9, top to bottom 
         self.cells = []
-        self.possible_values = [1,2,3,4,5,6,7,8,9]
+        self.impossible_values = []
 
 class col: 
     def __init__(self):         # ranges from 1-9, left to right 
         self.position = np.nan 
         self.cells = []
-        self.possible_values = [1,2,3,4,5,6,7,8,9]
+        self.impossible_values = []
         
 class box:
     def __init__(self):
         self.position = np.nan # ranges from 1-9, 1 2 3 | 4 5 6| 7 8 9 
         self.cells = []
-        self.possible_values = [1,2,3,4,5,6,7,8,9]
+        self.impossible_values = []
         
 class grid:
     def __init__(self):
@@ -80,16 +81,15 @@ class grid:
     def iterate(self):
         # Loops through each unsolved cell in the game board, and tries to solve.
         for cell in self.unsolved_cells:
-            row = cell.row 
-            col = cell.col 
-            box = cell.box
+            row = self.rows[cell.row-1]
+            col = self.cols[cell.col-1]
+            box = self.boxes[cell.box-1]
             
             print('Now trying to solve cell: ' + str(cell.cell_id))
             print('Starting possible values: ' + str(cell.possible_values))
-            
-            print(row)
-            print(col)
-            print(box)
+            print('#s already in row: ' + str(row.impossible_values))
+            print('#s already in col: ' + str(col.impossible_values))
+            print('#s already in box: ' + str(box.impossible_values))     
             
             # Since the more populated a row, grid, or column is, the more information  
             # it provides on a first run, I should dynamically go through them. But that optimization 
@@ -119,9 +119,9 @@ def process_starting_input(inp):
             if np.isnan(curr_cell.value) == False: # If the cell has a value 
                 curr_cell.possible_values = []
                 curr_cell.impossible_values = [] 
-                the_grid.rows[i-1].possible_values.remove(curr_cell.value)
-                the_grid.cols[j-1].possible_values.remove(curr_cell.value)
-                the_grid.boxes[curr_cell.box-1].possible_values.remove(curr_cell.value)
+                the_grid.rows[i-1].impossible_values.append(int(curr_cell.value))
+                the_grid.cols[j-1].impossible_values.append(int(curr_cell.value))
+                the_grid.boxes[curr_cell.box-1].impossible_values.append(int(curr_cell.value))
             else:
                 the_grid.unsolved_cells.append(curr_cell) # Use this list to track empty cells to allow faster iteration
             the_grid.rows[i-1].cells.append(curr_cell)
