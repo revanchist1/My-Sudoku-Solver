@@ -47,7 +47,7 @@ class grid:
         self.rows = []
         self.cols = []
         self.boxes = []
-        self.unsolved_cells[]
+        self.unsolved_cells = []
     
     def print_grid(self):
         top_row = '┌─────────┬─────────┬─────────┐'
@@ -95,10 +95,11 @@ def process_starting_input(inp):
             curr_cell.col = j 
             curr_cell.box = 3*int((i-1)/3) + max(1,math.ceil((j)/3))
             curr_cell.value =inp[i-1,j-1]
-            if np.isnan(curr_cell.value) == False:
+            if np.isnan(curr_cell.value) == False: # If the cell has a value 
                 curr_cell.possible_values = []
                 curr_cell.impossible_values = [] 
-            the_grid.unsolved_cells.append(curr_cell)
+            else:
+                the_grid.unsolved_cells.append(curr_cell) # Use this list to track empty cells to allow faster iteration
             the_grid.rows[i-1].cells.append(curr_cell)
             the_grid.cols[j-1].cells.append(curr_cell)
             the_grid.boxes[curr_cell.box-1].cells.append(curr_cell)
