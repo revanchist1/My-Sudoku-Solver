@@ -80,9 +80,9 @@ def initialize_grid(brd):
         brd.cols.append(col())
         brd.boxes.append(box())
     
-def process_input(inp):
+def process_starting_input(inp):
     the_grid = grid()
-    initialize_grid(the_grid) # Now grid has 
+    initialize_grid(the_grid) # Now grid has rows, columns, and boxes
 
     # Input: The raw input 
     # Output: Filters the raw game grid, and fills in rows, columns, and boxes with the appropriate cells. 
@@ -101,11 +101,7 @@ def process_input(inp):
             the_grid.cols[j-1].cells.append(curr_cell)
             the_grid.boxes[curr_cell.box-1].cells.append(curr_cell)
             #print('Appended cell %s to box %d!' % (str(curr_cell.cell_id), curr_cell.box))
-    return the_grid
-
-def update_possible_values(rid): # Goes through the grid row by row left to right, and updates each possible value. Sets a value if only 1 possibility, and prints grid if updted. 
-    
-                
+    return the_grid                
 
 # Step 1. Read in puzzle, and fill in rows, grids, and cells. 
 n = np.nan
@@ -119,14 +115,10 @@ input_grid = np.array([[n,n,8,2,n,n,9,n,3],
                        [n,7,n,n,n,6,8,9,1],
                        [8,n,n,4,3,n,7,n,6]]) 
     
-game_grid = process_input(input_grid)
+game_grid = process_starting_input(input_grid)
 game_grid.print_grid()
-update_possible_values(game_grid)
-
-
-# Okay. Now that I have the game board initialized as an object, and split into boxes, columns, and rows
-# I need a way to print the game board. 
 
 # Step 1 - simple logic: For each cell in each row, check row, column and grid, and exclude possibilities. If only 1 left after all 3 checks, assign value, update, and show plot. 
 
+# Okay. I need a function to iterate over each cell, and check the possible values based on what is in the row, box, and column. 
 
