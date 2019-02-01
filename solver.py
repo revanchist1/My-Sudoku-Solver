@@ -82,23 +82,25 @@ class grid:
                 print(mid_row)
         print(bot_row)
         
-    def explain_exclusions(self, cell, impossible_values, celltype):
-        for num in impossible_values:
+    def explain_exclusions(self, cell, impossible_values, celltype, cellnum):
+        exc_string = ''
+        pronoun = 'they are'
+
+        for idx, num in enumerate(impossible_values):
             try:
                 cell.possible_values.remove(num)
                 
-                string = ''
-                if celltype == 'row':
-                    string = str(cell.row)
-                elif celltype == 'col':
-                    string = str(cell.col)
-                elif celltype == 'box':
-                    string = str(cell.box)
-                
-                print('Cannot be ' + str(num) + ' because it is already in ' + celltype + ' # ' + string)
-                print('Possible values: ' + str(cell.possible_values))
+                if (idx == len(impossible_values)-1):
+                    exc_string += 'or ' + str(num) 
+                else:
+                    exc_string += str(num) + ', ' 
             except ValueError: 
                 continue
+        if (len(impossible_values) == 1):
+            pronoun = 'it is'
+            
+        print('Cannot be ' + exc_string + ' because ' + pronoun + ' already in ' + celltype + ' # ' + str(cellnum))
+        print('Possible values: ' + str(cell.possible_values))
         cell.possible_values.sort()
         
     def multi_cell_compare(self, cell, curr_obj, obj_name):
@@ -112,29 +114,41 @@ class grid:
             # Step 2. Count number of possible values. If this matches the number of cells, 
             # Step 3. Go to all unsolved cells that don't have the same possible values, and remove possible values from them. 
             
+            print('')
             print('Now inside multi_cell_compare, examining ' + obj_name)
             print('Current cell: ' + str(cell.cell_id))
             
             count = 0
             cells_to_ignore = [cell]
+            cells_to_ignore_ids = [cell.cell_id]
             cells_to_update = []
-            possible_values = cell.possible_values.sort()
             
             for curr_cell in curr_obj.cells: 
+                if (np.isnan(curr_cell.value) == False):
+                    continue
+                print('Comparing current to cell ' + str(curr_cell.cell_id))
+                print('Current possibile: ' + str(cell.possible_values))
+                print('Compare possibile: ' + str(curr_cell.possible_values))
                 if (curr_cell == cell): # If we are at the same cell
+                    print('At the same cell, incremented count by 1')
                     count += 1
                     continue
-                if (possible_values == curr_cell.possible_values):
+                if (cell.possible_values == curr_cell.possible_values):
                     cells_to_ignore.append(curr_cell)
+                    cells_to_ignore_ids.append(curr_cell.cell_id)
                     count += 1
                 else:
                     cells_to_update.append(curr_cell)
             
-            if (len(cells_to_ignore)-1==count):
+            print('count: ' + str(count))
+            print('cells_to_ignore: ' + str(len(cells_to_ignore)))
+            print('cells_to_ignore_ids: ' + str(cells_to_ignore_ids))
+            
+            if (len(cells_to_ignore)==count and count > 1):
                 for curr_cell in cells_to_update:
-                    for val in possible_values:
+                    for val in cell.possible_values:
                         curr_cell.possible_values.remove(val)
-                        print('Cell ' + str(curr_cell.cell_id) + ' cannot be any of ' + str(possible_values) + ' because of cells: ' + str(cells_to_ignore))
+                        print('Cell ' + str(curr_cell.cell_id) + ' cannot be any of ' + str(cell.possible_values) + ' because of cells: ' + str(cells_to_ignore_ids))
             return
             
     def iterate(self):
@@ -156,9 +170,9 @@ class grid:
             nums_in_col = col.impossible_values
             nums_in_box = box.impossible_values
 
-            self.explain_exclusions(cell, nums_in_row, 'row')
-            self.explain_exclusions(cell, nums_in_col, 'col')
-            self.explain_exclusions(cell, nums_in_box, 'box')
+            self.explain_exclusions(cell, nums_in_row, 'row', cell.row)
+            self.explain_exclusions(cell, nums_in_col, 'col', cell.col)
+            self.explain_exclusions(cell, nums_in_box, 'box', cell.box)
 
             self.multi_cell_compare(cell, row, 'row')
             #self.multi_cell_compare(cell, col, 'col')
