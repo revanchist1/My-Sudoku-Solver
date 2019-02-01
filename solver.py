@@ -2,6 +2,7 @@
 # Created by Soren Sabet Sarvestany based on strategies learned while playing sudoku
 # 01-13-2019 1:28 AM
 
+import copy 
 import numpy as np
 import math
 import os 
@@ -56,6 +57,7 @@ class grid:
         self.cols = []
         self.boxes = []
         self.unsolved_cells = []
+        self.changed_during_iteration = False # Infinite loop if no changes to gameboard after iteration 
     
     def print_grid(self):
         top_row = '┌─────────┬─────────┬─────────┐'
@@ -119,6 +121,7 @@ class grid:
             print('Cannot be ' + exc_string + ' because ' + pronoun + ' already in ' + celltype + ' # ' + str(cellnum))
             print('Possible values: ' + str(cell.possible_values))
             cell.possible_values.sort()
+            self.changed_during_iteration = True
         
     def multi_cell_compare(self, cell, curr_obj, obj_name):
             # If two cells in the same row or column have n possible values that are the same, then they can be excluded from all other cells in that row and column. 
@@ -162,17 +165,19 @@ class grid:
             print('cells_to_ignore: ' + str(len(cells_to_ignore)))
             print('cells_to_ignore_ids: ' + str(cells_to_ignore_ids))
             
-            if (len(cells_to_ignore)==count and count > 1):
+            if (len(cells_to_ignore)==count and count > 1 and len(cells_to_ignore[0].possible_values) == count):
                 for curr_cell in cells_to_update:
                     for val in cell.possible_values:
                         try:
                             curr_cell.possible_values.remove(val)
+                            self.changed_during_iteration = True
                         except ValueError:
                             pass
                         print('Cell ' + str(curr_cell.cell_id) + ' cannot be any of ' + str(cell.possible_values) + ' because of cells: ' + str(cells_to_ignore_ids))
             return
             
     def iterate(self):
+        self.changed_during_iteration = False
         solved_cells = []
         iterate_count = 0
         
@@ -214,6 +219,7 @@ class grid:
             else:
                 print('Unable to solve during this iteration, continuing to next empty cell!')
 
+            print('Changes detected during this run: ' + str(self.changed_during_iteration))
             input('Press enter to continue')
             cls()
             self.print_grid()
@@ -276,14 +282,34 @@ input_grid = np.array([[n,n,8,2,n,n,9,n,3],
                        [n,2,n,n,n,1,n,n,5],
                        [n,7,n,n,n,6,8,9,1],
                        [8,n,n,4,3,n,7,n,6]]) 
+
+#input_grid = np.array([[1,n,n,n,n,n,n,n,n],
+#                       [n,n,n,n,n,n,n,n,n],
+#                       [n,n,n,n,n,n,n,n,n],
+#                       [n,n,n,n,n,n,n,n,n],
+#                       [n,n,n,n,n,n,n,n,n],
+#                       [n,n,n,n,n,n,n,n,n],
+#                       [n,n,n,n,n,n,n,n,n],
+#                       [n,n,n,n,n,n,n,n,n],
+#                       [n,n,n,n,n,n,n,n,n]]) 
     
 game_grid = process_starting_input(input_grid)
 game_grid.print_grid()
-game_grid.iterate()
-print('Finished first iteration through game grid')
-game_grid.iterate()
-print('Finished second iteration through game grid')
-game_grid.iterate()
+iter_count = 1
+
+while True:
+    
+    game_grid.iterate()
+    print('Completed iteration # ' + str(iter_count))
+    iter_count += 1
+    # Check if it has been solved or not
+    if (len(game_grid.unsolved_cells) == 0):
+        print('Congratulations! The program was able to solve this Sudoku puzzle')
+        break
+    elif (game_grid.changed_during_iteration == False):
+        print('No changes were made during the previous iteration - no unique solution found')
+        break
+    
 
 # Step 1 - simple logic: For each cell in each row, check row, column and grid, and exclude possibilities. If only 1 left after all 3 checks, assign value, update, and show plot. 
 
