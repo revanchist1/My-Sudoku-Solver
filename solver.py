@@ -282,7 +282,11 @@ game_grid.print_grid()
 game_grid.iterate()
 print('Finished first iteration through game grid')
 game_grid.iterate()
+print('Finished second iteration through game grid')
+game_grid.iterate()
 
 # Step 1 - simple logic: For each cell in each row, check row, column and grid, and exclude possibilities. If only 1 left after all 3 checks, assign value, update, and show plot. 
 
 # Okay. Add code so that if there is only 1 element in each row, column, or box, it automatically solves it instead of going in order, then comes back to where it was. 
+# Also need to add code so that if a human could obviously infer what the number would be based on surrounding empty cells in the same grid, then the algorithm should figure it out too. 
+# Also need to add functionality to automatically loop until the game board has been sovled, or recognize when it is in an infinite loop. # This last feature will be easiest to implement first, because if I implement the others I might be able to solve the puzzle in one iteration. 
