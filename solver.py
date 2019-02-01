@@ -99,9 +99,47 @@ class grid:
                 print('Possible values: ' + str(cell.possible_values))
             except ValueError: 
                 continue
+        cell.possible_values.sort()
+        
+    def multi_cell_compare(self, cell, curr_obj, obj_name):
+            # If two cells in the same row or column have n possible values that are the same, then they can be excluded from all other cells in that row and column. 
+            # Step 1. Loop through all other cells in that row and column 
+            # Step 2. Compare possible values in these cells to possible values in the current cell 
+            # Step 3. If the possible values match, then exclude those possible values from all other cells in the row (if searching over row) or column (if searching over column)
+            # The above works in a two number case, but what if there are more numbers? 
+            # Suppose there were 3 numbers that I could exclude. 
+            # Step 1. Count number of cells that have the same possible values 
+            # Step 2. Count number of possible values. If this matches the number of cells, 
+            # Step 3. Go to all unsolved cells that don't have the same possible values, and remove possible values from them. 
+            
+            print('Now inside multi_cell_compare, examining ' + obj_name)
+            print('Current cell: ' + str(cell.cell_id))
+            
+            count = 0
+            cells_to_ignore = [cell]
+            cells_to_update = []
+            possible_values = cell.possible_values.sort()
+            
+            for curr_cell in curr_obj.cells: 
+                if (curr_cell == cell): # If we are at the same cell
+                    count += 1
+                    continue
+                if (possible_values == curr_cell.possible_values):
+                    cells_to_ignore.append(curr_cell)
+                    count += 1
+                else:
+                    cells_to_update.append(curr_cell)
+            
+            if (len(cells_to_ignore)-1==count):
+                for curr_cell in cells_to_update:
+                    for val in possible_values:
+                        curr_cell.possible_values.remove(val)
+                        print('Cell ' + str(curr_cell.cell_id) + ' cannot be any of ' + str(possible_values) + ' because of cells: ' + str(cells_to_ignore))
+            return
             
     def iterate(self):
         solved_cells = []
+        iterate_count = 0
         
         # Loops through each unsolved cell in the game board, and tries to solve.
         for cell in self.unsolved_cells:
@@ -121,16 +159,12 @@ class grid:
             self.explain_exclusions(cell, nums_in_row, 'row')
             self.explain_exclusions(cell, nums_in_col, 'col')
             self.explain_exclusions(cell, nums_in_box, 'box')
+
+            self.multi_cell_compare(cell, row, 'row')
+            #self.multi_cell_compare(cell, col, 'col')
+            
             # If only 1 possible number, set cell value as that, and update row, col, and box possibilities, and remove from solved cells. 
             # otherwise, continue
-            
-            # If two cells in the same row or column have n possible values that are the same, then they can be excluded from all other cells in that row and column. 
-            # Step 1. Loop through all other cells in that row and column 
-            # Step 2. Compare possible values in these cells to possible values in the current cell 
-            # Step 3. If the possible values match, then exclude those possible values from all other cells in the row (if searching over row) or column (if searching over column)
-            
-            
-            
             if len(cell.possible_values) == 1:
                 cell.value = cell.possible_values[0]
                 row.impossible_values.append(cell.value)
@@ -139,15 +173,18 @@ class grid:
                 solved_cells.append(cell)
                 print('Solved this cell') # input logic to deal with correct cell later. 
             else:
-            input('Press enter to continue')
-                print('Unable to solve during this iteration, continuing to next empty cell!')
+                input('Press enter to continue')
+            print('Unable to solve during this iteration, continuing to next empty cell!')
             cls()
             self.print_grid()
+            iterate_count += 1
+            if (iterate_count > 6):
+                break
         
         for cell in solved_cells:
             self.unsolved_cells.remove(cell)                    
         
-            
+
             # Since the more populated a row, grid, or column is, the more information  
             # it provides on a first run, I should dynamically go through them. But that optimization 
             # can come later. 
@@ -184,6 +221,7 @@ def process_starting_input(inp):
             the_grid.rows[i-1].cells.append(curr_cell)
             the_grid.cols[j-1].cells.append(curr_cell)
             the_grid.boxes[curr_cell.box-1].cells.append(curr_cell)
+
             #print('Appended cell %s to box %d!' % (str(curr_cell.cell_id), curr_cell.box))
     return the_grid                
 
