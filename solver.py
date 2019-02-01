@@ -101,6 +101,8 @@ class grid:
                 continue
             
     def iterate(self):
+        solved_cells = []
+        
         # Loops through each unsolved cell in the game board, and tries to solve.
         for cell in self.unsolved_cells:
             
@@ -108,9 +110,13 @@ class grid:
             print('Starting possible values: ' + str(cell.possible_values))
             
             # easier to understand code if I give the impossible values names
-            nums_in_row = self.rows[cell.row-1].impossible_values
-            nums_in_col = self.cols[cell.col-1].impossible_values
-            nums_in_box = self.boxes[cell.box-1].impossible_values
+            row = self.rows[cell.row-1]
+            col = self.cols[cell.col-1]
+            box = self.boxes[cell.box-1]
+            
+            nums_in_row = row.impossible_values
+            nums_in_col = col.impossible_values
+            nums_in_box = box.impossible_values
 
             self.explain_exclusions(cell, nums_in_row, 'row')
             self.explain_exclusions(cell, nums_in_col, 'col')
@@ -118,15 +124,29 @@ class grid:
             # If only 1 possible number, set cell value as that, and update row, col, and box possibilities, and remove from solved cells. 
             # otherwise, continue
             
+            # If two cells in the same row or column have n possible values that are the same, then they can be excluded from all other cells in that row and column. 
+            # Step 1. Loop through all other cells in that row and column 
+            # Step 2. Compare possible values in these cells to possible values in the current cell 
+            # Step 3. If the possible values match, then exclude those possible values from all other cells in the row (if searching over row) or column (if searching over column)
+            
+            
+            
             if len(cell.possible_values) == 1:
+                cell.value = cell.possible_values[0]
+                row.impossible_values.append(cell.value)
+                col.impossible_values.append(cell.value)
+                box.impossible_values.append(cell.value)
+                solved_cells.append(cell)
                 print('Solved this cell') # input logic to deal with correct cell later. 
             else:
+            input('Press enter to continue')
                 print('Unable to solve during this iteration, continuing to next empty cell!')
-                input('Press enter to continue')
-                cls()
-                self.print_grid()
-                    
-            
+            cls()
+            self.print_grid()
+        
+        for cell in solved_cells:
+            self.unsolved_cells.remove(cell)                    
+        
             
             # Since the more populated a row, grid, or column is, the more information  
             # it provides on a first run, I should dynamically go through them. But that optimization 
