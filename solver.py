@@ -114,10 +114,11 @@ class grid:
 
                 else:
                     exc_string += str(num) + ', '
-        
-        print('Cannot be ' + exc_string + ' because ' + pronoun + ' already in ' + celltype + ' # ' + str(cellnum))
-        print('Possible values: ' + str(cell.possible_values))
-        cell.possible_values.sort()
+       
+        if (exc_count > 0):
+            print('Cannot be ' + exc_string + ' because ' + pronoun + ' already in ' + celltype + ' # ' + str(cellnum))
+            print('Possible values: ' + str(cell.possible_values))
+            cell.possible_values.sort()
         
     def multi_cell_compare(self, cell, curr_obj, obj_name):
             # If two cells in the same row or column have n possible values that are the same, then they can be excluded from all other cells in that row and column. 
@@ -164,7 +165,10 @@ class grid:
             if (len(cells_to_ignore)==count and count > 1):
                 for curr_cell in cells_to_update:
                     for val in cell.possible_values:
-                        curr_cell.possible_values.remove(val)
+                        try:
+                            curr_cell.possible_values.remove(val)
+                        except ValueError:
+                            pass
                         print('Cell ' + str(curr_cell.cell_id) + ' cannot be any of ' + str(cell.possible_values) + ' because of cells: ' + str(cells_to_ignore_ids))
             return
             
@@ -187,12 +191,16 @@ class grid:
             nums_in_col = col.impossible_values
             nums_in_box = box.impossible_values
 
-            self.explain_exclusions(cell, nums_in_row, 'row', cell.row)
-            self.explain_exclusions(cell, nums_in_col, 'column', cell.col)
-            self.explain_exclusions(cell, nums_in_box, 'box', cell.box)
-
-            self.multi_cell_compare(cell, row, 'row')
-            #self.multi_cell_compare(cell, col, 'col')
+            if (len(cell.possible_values) != 1):
+                self.explain_exclusions(cell, nums_in_row, 'row', cell.row)
+            if (len(cell.possible_values) != 1):
+                self.explain_exclusions(cell, nums_in_col, 'column', cell.col)
+            if (len(cell.possible_values) != 1):
+                self.explain_exclusions(cell, nums_in_box, 'box', cell.box)
+            if (len(cell.possible_values) != 1):
+                self.multi_cell_compare(cell, row, 'row')
+            if (len(cell.possible_values) != 1):
+                self.multi_cell_compare(cell, col, 'col')
             
             # If only 1 possible number, set cell value as that, and update row, col, and box possibilities, and remove from solved cells. 
             # otherwise, continue
@@ -204,13 +212,14 @@ class grid:
                 solved_cells.append(cell)
                 print('Solved this cell') # input logic to deal with correct cell later. 
             else:
-                input('Press enter to continue')
-            print('Unable to solve during this iteration, continuing to next empty cell!')
+                print('Unable to solve during this iteration, continuing to next empty cell!')
+
+            input('Press enter to continue')
             cls()
             self.print_grid()
             iterate_count += 1
-            if (iterate_count > 6):
-                break
+#            if (iterate_count > 6):
+#                break
         
         for cell in solved_cells:
             self.unsolved_cells.remove(cell)                    
@@ -271,5 +280,9 @@ input_grid = np.array([[n,n,8,2,n,n,9,n,3],
 game_grid = process_starting_input(input_grid)
 game_grid.print_grid()
 game_grid.iterate()
+print('Finished first iteration through game grid')
+game_grid.iterate()
 
 # Step 1 - simple logic: For each cell in each row, check row, column and grid, and exclude possibilities. If only 1 left after all 3 checks, assign value, update, and show plot. 
+
+# Okay. Add code so that if there is only 1 element in each row, column, or box, it automatically solves it instead of going in order, then comes back to where it was. 
