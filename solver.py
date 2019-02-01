@@ -134,14 +134,15 @@ class grid:
             # Step 2. Count number of possible values. If this matches the number of cells, 
             # Step 3. Go to all unsolved cells that don't have the same possible values, and remove possible values from them. 
             
-            print('')
-            print('Now inside multi_cell_compare, examining ' + obj_name)
-            print('Current cell: ' + str(cell.cell_id))
+#            print('')
+#            print('Now inside multi_cell_compare, examining ' + obj_name)
+#            print('Current cell: ' + str(cell.cell_id))
             
             count = 0
             cells_to_ignore = [cell]
             cells_to_ignore_ids = [cell.cell_id]
             cells_to_update = []
+            cells_to_update_ids = []
             
             for curr_cell in curr_obj.cells: 
                 if (np.isnan(curr_cell.value) == False):
@@ -150,9 +151,9 @@ class grid:
                     count += 1
                     continue
                 
-                print('Comparison cell: ' + str(curr_cell.cell_id))
-                print('Current cell possible values: ' + str(cell.possible_values))
-                print('Comparison cell possible values: ' + str(curr_cell.possible_values))
+#                print('Comparison cell: ' + str(curr_cell.cell_id))
+#                print('Current cell possible values: ' + str(cell.possible_values))
+#                print('Comparison cell possible values: ' + str(curr_cell.possible_values))
                 
                 if (cell.possible_values == curr_cell.possible_values):
                     cells_to_ignore.append(curr_cell)
@@ -160,20 +161,26 @@ class grid:
                     count += 1
                 else:
                     cells_to_update.append(curr_cell)
+                    cells_to_update_ids.append(curr_cell.cell_id)
             
-            print('count: ' + str(count))
-            print('cells_to_ignore: ' + str(len(cells_to_ignore)))
-            print('cells_to_ignore_ids: ' + str(cells_to_ignore_ids))
+#            print('count: ' + str(count))
+#            print('cells_to_ignore: ' + str(len(cells_to_ignore)))
+#            print('cells_to_ignore_ids: ' + str(cells_to_ignore_ids))
+            
+            explanation_string = 'Since cells ' + str(cells_to_ignore_ids) + ' can each only be one of ' + str(cell.possible_values) + ', then cells ' + str(cells_to_update_ids) + ' cannot be these values.' 
             
             if (len(cells_to_ignore)==count and count > 1 and len(cells_to_ignore[0].possible_values) == count):
                 for curr_cell in cells_to_update:
+                    if (np.isnan(curr_cell.value) == False):
+                        continue
                     for val in cell.possible_values:
                         try:
                             curr_cell.possible_values.remove(val)
                             self.changed_during_iteration = True
                         except ValueError:
                             pass
-                        print('Cell ' + str(curr_cell.cell_id) + ' cannot be any of ' + str(cell.possible_values) + ' because of cells: ' + str(cells_to_ignore_ids))
+                    #print('Cell ' + str(curr_cell.cell_id) + ' cannot be any of ' + str(cell.possible_values) + ' because of cells: ' + str(cells_to_ignore_ids))
+                print(explanation_string)
             return
             
     def iterate(self):
@@ -217,9 +224,11 @@ class grid:
                 solved_cells.append(cell)
                 print('Solved this cell') # input logic to deal with correct cell later. 
             else:
-                print('Unable to solve during this iteration, continuing to next empty cell!')
+                print('Could not solve cell, continuing to next empty cell...')
 
-            print('Changes detected during this run: ' + str(self.changed_during_iteration))
+            if (self.changed_during_iteration == False):
+                print('Warning: No changes detected during iteration')
+
             input('Press enter to continue')
             cls()
             self.print_grid()
