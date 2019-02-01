@@ -119,7 +119,6 @@ class grid:
        
         if (exc_count > 0):
             print('Cannot be ' + exc_string + ' because ' + pronoun + ' already in ' + celltype + ' # ' + str(cellnum))
-            print('Possible values: ' + str(cell.possible_values))
             cell.possible_values.sort()
             self.changed_during_iteration = True
         
@@ -167,7 +166,7 @@ class grid:
 #            print('cells_to_ignore: ' + str(len(cells_to_ignore)))
 #            print('cells_to_ignore_ids: ' + str(cells_to_ignore_ids))
             
-            explanation_string = 'Since cells ' + str(cells_to_ignore_ids) + ' can each only be one of ' + str(cell.possible_values) + ', then cells ' + str(cells_to_update_ids) + ' cannot be these values.' 
+            explanation_string = 'Since cells ' + str(cells_to_ignore_ids) + ' can each only contain one of ' + str(cell.possible_values) + ', then cells ' + str(cells_to_update_ids) + ' cannot contain these values.' 
             
             if (len(cells_to_ignore)==count and count > 1 and len(cells_to_ignore[0].possible_values) == count):
                 for curr_cell in cells_to_update:
@@ -181,7 +180,27 @@ class grid:
                             pass
                     #print('Cell ' + str(curr_cell.cell_id) + ' cannot be any of ' + str(cell.possible_values) + ' because of cells: ' + str(cells_to_ignore_ids))
                 print(explanation_string)
+                print('')
             return
+    
+    def check_object(self, obj): # Best to re-write this recurisvely after, since I can always keep checking row, column, and grid that was just solved. 
+        for cell in obj.cells:
+            row = self.rows[cell.row-1]
+            col = self.cols[cell.col-1]
+            box = self.boxes[cell.box-1]
+            
+            if (np.isnan(cell.value) == False):
+                continue
+            if (len(cell.possible_values) == 1):
+                cell.value = cell.possible_values[0]
+                if (row != obj):
+                    row.impossible_values.append(cell.value)
+                if (col != obj):
+                    col.impossible_values.append(cell.value)
+                if (box != obj):
+                    box.impossible_values.append(cell.value)
+            # What would happen if I did recursion on this? I'll try it on the next run 
+            
             
     def iterate(self):
         self.changed_during_iteration = False
@@ -209,6 +228,8 @@ class grid:
                 self.explain_exclusions(cell, nums_in_col, 'column', cell.col)
             if (len(cell.possible_values) != 1):
                 self.explain_exclusions(cell, nums_in_box, 'box', cell.box)
+            print('Possible values: ' + str(cell.possible_values))
+
             if (len(cell.possible_values) != 1):
                 self.multi_cell_compare(cell, row, 'row')
             if (len(cell.possible_values) != 1):
@@ -223,6 +244,13 @@ class grid:
                 box.impossible_values.append(cell.value)
                 solved_cells.append(cell)
                 print('Solved this cell') # input logic to deal with correct cell later. 
+            
+            # Check if we can solve any row, grid, or column given the cell we just solved. 
+            check_obj(row)
+            check_obj(col)
+            check_obj(box)
+            
+            
             else:
                 print('Could not solve cell, continuing to next empty cell...')
 
