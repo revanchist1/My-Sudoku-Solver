@@ -251,6 +251,10 @@ class grid:
             case1 = val in row1vals and val in row2vals and val in col1vals and val in col2vals
             case2 = val in row1vals and val in row2vals and np.isnan(col1cell.value) == False and np.isnan(col2cell.value) == False
             case3 = val in col1vals and val in col2vals and np.isnan(row1cell.value) == False and np.isnan(row2cell.value) == False
+            case4 = val in col1vals and val in col2vals and val in row1vals and np.isnan(row2cell.value) == False
+            case5 = val in col1vals and val in col2vals and val in row2vals and np.isnan(row1cell.value) == False
+            case6 = val in row1vals and val in row2vals and val in col1vals and np.isnan(col2cell.value) == False
+            case7 = val in row1vals and val in row2vals and val in col2vals and np.isnan(col1cell.value) == False
             
             print('Current value of interest: ' + str(val))
             
@@ -268,9 +272,19 @@ class grid:
                 print('Cell ' + str(cell.cell_id) + ' can only be ' + str(val) + ' because there are ' + str(val) + '\'s in rows ' + str(row1_idx) + ' and ' + str(row2_idx) + ' and cells ' + str(col1cell.cell_id) + ' and ' + str(col2cell.cell_id) + ' are already populated')
             elif (case3 == True):
                 print('Cell ' + str(cell.cell_id) + ' can only be ' + str(val) + ' because there are ' + str(val) + '\'s in columns ' + str(col1_idx) + ' and ' + str(col2_idx) + ' and cells ' + str(row1cell.cell_id) + ' and ' + str(row2cell.cell_id) + ' are already populated')
- 
+            elif (case4 == True):
+                print('Cell ' + str(cell.cell_id) + ' can only be ' + str(val) + ' because there are ' + str(val) + '\'s in columns ' + str(col1_idx) + ' and ' + str(col2_idx) + ' and row ' + str(row1_idx) + ' and cell ' + str(row2cell.cell_id) + ' is already populated')
+            elif (case5 == True):
+                print('Cell ' + str(cell.cell_id) + ' can only be ' + str(val) + ' because there are ' + str(val) + '\'s in columns ' + str(col1_idx) + ' and ' + str(col2_idx) + ' and row ' + str(row2_idx) + ' and cell ' + str(row1cell.cell_id) + ' is already populated')
+            elif (case6 == True):
+                print('Cell ' + str(cell.cell_id) + ' can only be ' + str(val) + ' because there are ' + str(val) + '\'s in rows ' + str(row1_idx) + ' and ' + str(row2_idx) + ' and column ' + str(col1_idx) + ' and cell ' + str(col2cell.cell_id) + ' is already populated')
+            elif (case7 == True):
+                print('Cell ' + str(cell.cell_id) + ' can only be ' + str(val) + ' because there are ' + str(val) + '\'s in rows ' + str(row1_idx) + ' and ' + str(row2_idx) + ' and column ' + str(col2_idx) + ' and cell ' + str(col1cell.cell_id) + ' is already populated')
+
+            # I actually needed to iterate over the cells in the grid. re-incorporate that functionality tomorrow. 
+
             # If the current possible value is impossible in all 4 of the above, then assign value to this cell. 
-            if (case1 or case2 or case3):
+            if (case1 or case2 or case3 or case4 or case5 or case6 or case7):
                 cell.possible_values = [val]
                 return
             input ('Press enter to continue')
@@ -302,18 +316,19 @@ class grid:
         nums_in_col = col.impossible_values
         nums_in_box = box.impossible_values
 
-#        if (len(cell.possible_values) != 1):
-#            self.explain_exclusions(cell, nums_in_row, 'row', cell.row)
-#        if (len(cell.possible_values) != 1):
-#            self.explain_exclusions(cell, nums_in_col, 'column', cell.col)
+        if (len(cell.possible_values) != 1):
+            self.explain_exclusions(cell, nums_in_row, 'row', cell.row)
+        if (len(cell.possible_values) != 1):
+            self.explain_exclusions(cell, nums_in_col, 'column', cell.col)
         if (len(cell.possible_values) != 1):
             self.explain_exclusions(cell, nums_in_box, 'box', cell.box)
         print('Possible values: ' + str(cell.possible_values))
 
-#        if (len(cell.possible_values) != 1):
-#            self.multi_cell_compare(cell, row, 'row')
-#        if (len(cell.possible_values) != 1):
-#            self.multi_cell_compare(cell, col, 'col')
+        if (len(cell.possible_values) != 1):
+            self.multi_cell_compare(cell, row, 'row')
+        if (len(cell.possible_values) != 1):
+            self.multi_cell_compare(cell, col, 'col')
+        # Need multi-cell box solver as well, e.g. see cell (6,3) using left to right solution
             
         if (len(cell.possible_values) != 1):
             self.grid_cell_exclusions(cell, box)
@@ -329,12 +344,13 @@ class grid:
             print('Solved this cell') # input logic to deal with correct cell later. 
             input ('Press enter to continue')
 
-            for row_cell in row.cells:
-                self.solve_cell(row_cell)
-            for col_cell in col.cells:
-                self.solve_cell(col_cell)
-            for box_cell in box.cells:
-                self.solve_cell(box_cell)
+            # Recursion is fancy, but it is not intuitive for a human, and the objective is to have an interpretable sudoku solver. 
+#            for row_cell in row.cells:
+#                self.solve_cell(row_cell)
+#            for col_cell in col.cells:
+#                self.solve_cell(col_cell)
+#            for box_cell in box.cells:
+#                self.solve_cell(box_cell)
             
         else:
             print('Could not solve cell, continuing to next empty cell...')
