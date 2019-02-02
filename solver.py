@@ -91,12 +91,18 @@ class grid:
         exc_count = 0
         pronoun = ''
         
+        print('Now inside explain exclusions!')
+        print('Impossible values inside column: ' + str(impossible_values))
+        print('Possible values inside cell: ' + str(cell.possible_values))
+        
         for idx, num in enumerate(impossible_values):
             try:
                 cell.possible_values.remove(num)
                 exc_values.append(num)
                 exc_count += 1 
+                print('Succesfully removed ' + str(num) + ' from possible values!')
             except ValueError: 
+                #print('Error!')
                 continue
         
         for idx, num in enumerate(exc_values):
@@ -118,16 +124,18 @@ class grid:
                 else:
                     exc_string += str(num) + ', '
        
+        #print('exclusion count: ' + str(exc_count))
+        
         if (exc_count > 0):
             print('Cannot be ' + exc_string + ' because ' + pronoun + ' already in ' + celltype + ' # ' + str(cellnum))
             cell.possible_values.sort()
             self.changed_during_iteration = True
         
     def multi_cell_compare(self, cell, curr_obj, obj_name):
-            # If two cells in the same row or column have n possible values that are the same, then they can be excluded from all other cells in that row and column. 
-            # Step 1. Loop through all other cells in that row and column 
+            # If two cells in the same row or column or box have n possible values that are the same, then they can be excluded from all other cells in that row and column and box. 
+            # Step 1. Loop through all other cells in that row and column and box
             # Step 2. Compare possible values in these cells to possible values in the current cell 
-            # Step 3. If the possible values match, then exclude those possible values from all other cells in the row (if searching over row) or column (if searching over column)
+            # Step 3. If the possible values match, then exclude those possible values from all other cells in the row (if searching over row) or column (if searching over column) or box (if searching over box)
             # The above works in a two number case, but what if there are more numbers? 
             # Suppose there were 3 numbers that I could exclude. 
             # Step 1. Count number of cells that have the same possible values 
@@ -150,6 +158,16 @@ class grid:
                 if (curr_cell == cell): # If we are at the same cell
                     count += 1
                     continue
+                
+                # I need a way to update the current cells possible values based on the box, row, or column being considered 
+                if (obj_name == 'col'):
+                    item = cell.col
+                elif (obj_name == 'row'):
+                    item = cell.row
+                elif (obj_name == 'box'):
+                    item = cell.box
+                
+                self.explain_exclusions(curr_cell, curr_cell.impossible_values, obj_name, item)
                 
 #                print('Comparison cell: ' + str(curr_cell.cell_id))
 #                print('Current cell possible values: ' + str(cell.possible_values))
@@ -180,9 +198,38 @@ class grid:
                         except ValueError:
                             pass
                     #print('Cell ' + str(curr_cell.cell_id) + ' cannot be any of ' + str(cell.possible_values) + ' because of cells: ' + str(cells_to_ignore_ids))
-                print(explanation_string)
-                print('')
+                if (len(cells_to_update_ids) > 0):
+                    print(explanation_string)
+                    print('')
             return
+    
+    def column_cell_exclusions(self, cell, col_obj):
+        # Check all empty cells in a column. If none of them can hold the value of interest, then it must go into the current cell. 
+        count = 0
+        cells_to_ignore = [cell]
+        cells_to_ignore_ids = [cell.cell_id]
+        cells_to_update = []
+        cells_to_update_ids = []
+        
+        # Step 1. Update impossible values for every cell in the column. 
+        for col_cell in col_obj.cells:
+            if (np.isnan(col_cell.value) == False):
+                continue
+            print('Column impossible values: ' + str(self.cols[cell.col-1].impossible_values))
+            print('Col cell: ' + str(col_cell.cell_id) + ' possible values: ' + str(col_cell.possible_values))
+            self.explain_exclusions(col_cell, self.cols[cell.col-1].impossible_values, 'col', cell.col)
+            print('Updated Col cell possible values: ' + str(col_cell.possible_values))
+
+#        for val in cell.possible_values: 
+#            for col_cell in col_obj.cells:
+#                if (np.isnan(col_cell) == False):
+#                    continue
+#                
+#                # Update impossible values for the column cell 
+#                self.explain_exclusions(col_cell, col = self.cols[cell.col-1].impossible_values, 'col', cell.col)
+#                
+                
+                
         
     def grid_cell_exclusions(self, cell, box_obj):
         # Okay. This function checks if a specific value can't exist in any other cell in the grid, based on the values present in other rows and columns that intersect with the grid 
@@ -316,22 +363,28 @@ class grid:
         nums_in_col = col.impossible_values
         nums_in_box = box.impossible_values
 
-        if (len(cell.possible_values) != 1):
-            self.explain_exclusions(cell, nums_in_row, 'row', cell.row)
+#        if (len(cell.possible_values) != 1):
+#            self.explain_exclusions(cell, nums_in_row, 'row', cell.row)
         if (len(cell.possible_values) != 1):
             self.explain_exclusions(cell, nums_in_col, 'column', cell.col)
-        if (len(cell.possible_values) != 1):
-            self.explain_exclusions(cell, nums_in_box, 'box', cell.box)
-        print('Possible values: ' + str(cell.possible_values))
+#        if (len(cell.possible_values) != 1):
+#            self.explain_exclusions(cell, nums_in_box, 'box', cell.box)
+#        print('Possible values: ' + str(cell.possible_values))
 
-        if (len(cell.possible_values) != 1):
-            self.multi_cell_compare(cell, row, 'row')
-        if (len(cell.possible_values) != 1):
-            self.multi_cell_compare(cell, col, 'col')
+#        if (len(cell.possible_values) != 1):
+#            self.multi_cell_compare(cell, row, 'row')
+#        if (len(cell.possible_values) != 1):
+#            self.multi_cell_compare(cell, col, 'col')
+#        if (len(cell.possible_values) != 1):
+#            self.multi_cell_compare(cell, box, 'box')
         # Need multi-cell box solver as well, e.g. see cell (6,3) using left to right solution
             
+#        if (len(cell.possible_values) != 1):
+#            self.grid_cell_exclusions(cell, box)
+#        if (len(cell.possible_values) != 1):
+#            self.row_cell_exclusions(cell, row)
         if (len(cell.possible_values) != 1):
-            self.grid_cell_exclusions(cell, box)
+            self.column_cell_exclusions(cell, row)
         
         # If only 1 possible number, set cell value as that, and update row, col, and box possibilities, and remove from solved cells. 
         # otherwise, continue
