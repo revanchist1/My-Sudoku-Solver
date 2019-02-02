@@ -57,6 +57,7 @@ class grid:
         self.cols = []
         self.boxes = []
         self.unsolved_cells = []
+        self.solved_cells = []
         self.changed_during_iteration = False # Infinite loop if no changes to gameboard after iteration 
     
     def print_grid(self):
@@ -182,92 +183,183 @@ class grid:
                 print(explanation_string)
                 print('')
             return
+        
+    def grid_cell_exclusions(self, cell, box_obj):
+        # Okay. This function checks if a specific value can't exist in any other cell in the grid, based on the values present in other rows and columns that intersect with the grid 
+        
+        # Step 1: Loop over posible values in the cell 
+        # Step 2: Loop over all other cells in the box 
+        # Step 3: Check if the current possible value can be excluded based on row and column of all other cells in the grid 
+        # Step 4: If the posible value can only eixst in that cell, then update the current value 
+        
+        vals_in_box = []
+        
+        for box_cell in box_obj.cells:
+            if (np.isnan(box_cell.value) == False):
+                vals_in_box.append(box_cell.value)
+                continue 
+            for val in cell.possible_values:
+                if (cell == box_cell or val in vals_in_box):
+                    continue
+                
+                # Edge case, one is false, but the cell in that row is full. 
+                # Edge case 1: Can't be in both rows, and 2 other column cells are full (along the row)
+                # Edge case 2: Can't be in both columns, but 2 other row cells are full (along the column)
+                
+                # Get row num and column num 
+                row_num = cell.row
+                col_num = cell.col
+                
+                # Step 1. Functionality to check correct rows and columns 
+                col1_idx = 0
+                col2_idx = 0
+                row1_idx = 0
+                row2_idx = 0
+                
+                if (col_num % 3 == 0):
+                    col1_idx = col_num - 2
+                    col2_idx = col_num - 1
+                elif (col_num % 3 == 1):
+                    col1_idx = col_num + 1
+                    col2_idx = col_num + 2
+                elif (col_num % 3 == 2):
+                    col1_idx = col_num - 1
+                    col2_idx = col_num + 1
+                    
+                if (row_num % 3 == 0):
+                    row1_idx = row_num - 2
+                    row2_idx = row_num - 1
+                elif (row_num % 3 == 1):
+                    row1_idx = row_num + 1
+                    row2_idx = row_num + 2
+                elif (row_num % 3 == 2):
+                    row1_idx = row_num - 1
+                    row2_idx = row_num + 1
+                    
+#                print('Relevant column indices: ' + str(col1_idx) + ', ' + str(col2_idx))
+#                print('Relevant row indices: ' + str(row1_idx) + ', ' + str(row2_idx))
+                
+                row1vals = self.rows[row1_idx-1].impossible_values
+                row2vals = self.rows[row2_idx-1].impossible_values
+                col1vals = self.cols[col1_idx-1].impossible_values
+                col2vals = self.cols[col2_idx-1].impossible_values
+                
+                row1cell = self.rows[row1_idx-1].cells[row1_idx-1]
+                row2cell = self.rows[row2_idx-1].cells[row2_idx-1]
+                col1cell = self.cols[col1_idx-1].cells[col1_idx-1]
+                col2cell = self.cols[col2_idx-1].cells[col2_idx-1]
+                
+                print('row1cell id: ' + row1cell.cell_id)
+                print('row2cell id: ' + row2cell.cell_id)
+                print('col1cell id: ' + col1cell.cell_id)
+                print('col2cell id: ' + col2cell.cell_id)
+          
+                case1 = val in row1vals and val in row2vals and val in col1vals and val in col2vals
+                case2 = val in row1vals and val in row2vals and np.isnan(col1cell.value) == False and np.isnan(col2cell.value) == False
+                case3 = val in col1vals and val in col2vals and np.isnan(row1cell.value) == False and np.isnan(row2cell.value) == False
+                
+                print('Current value of interest: ' + str(val))
+                
+                print('row1vals: ' + str(row1vals) + ' val in row1vals: ' + str(val in row1vals))
+                print('row2vals: ' + str(row2vals) + ' val in row2vals: ' + str(val in row2vals))
+                print('col1vals: ' + str(col1vals) + ' val in col1vals: ' + str(val in col1vals))
+                print('col2vals: ' + str(col2vals) + ' val in col2vals: ' + str(val in col2vals))
+                
+                print('case1: ' + str(case1))
+                print('case2: ' + str(case2))
+                print('case3: ' + str(case3))
+                
+                # If the current possible value is impossible in all 4 of the above, then assign value to this cell. 
+                if (case1 or case2 or case3):
+                    print('val: ' + str(val) + ' cannot be in any row or column and is therefore in this cell')
+                    cell.possible_values = [val]
+                    return
+                input ('Press enter to continue')
+
+
+                # Need to get rows 
+#                row = self.rows[cell.row-1]
+#                col = self.cols[cell.col-1]
+#                box = self.boxes[cell.box-1]
+#                
+#                if val in impossible_values of rows above and below and left-right column:
     
-    def check_object(self, obj): # Best to re-write this recurisvely after, since I can always keep checking row, column, and grid that was just solved. 
-        for cell in obj.cells:
-            row = self.rows[cell.row-1]
-            col = self.cols[cell.col-1]
-            box = self.boxes[cell.box-1]
+    def solve_cell(self, cell): 
+        if (np.isnan(cell.value) == False):
+            return 
+        
+        cls()
+        self.print_grid()
+        
+        print('Now trying to solve cell: ' + str(cell.cell_id))
+        print('Starting possible values: ' + str(cell.possible_values))
             
-            if (np.isnan(cell.value) == False):
-                continue
-            if (len(cell.possible_values) == 1):
-                cell.value = cell.possible_values[0]
-                if (row != obj):
-                    row.impossible_values.append(cell.value)
-                if (col != obj):
-                    col.impossible_values.append(cell.value)
-                if (box != obj):
-                    box.impossible_values.append(cell.value)
-            # What would happen if I did recursion on this? I'll try it on the next run 
+        # easier to understand code if I give the impossible values names
+        row = self.rows[cell.row-1]
+        col = self.cols[cell.col-1]
+        box = self.boxes[cell.box-1]
+        
+        nums_in_row = row.impossible_values
+        nums_in_col = col.impossible_values
+        nums_in_box = box.impossible_values
+
+#        if (len(cell.possible_values) != 1):
+#            self.explain_exclusions(cell, nums_in_row, 'row', cell.row)
+#        if (len(cell.possible_values) != 1):
+#            self.explain_exclusions(cell, nums_in_col, 'column', cell.col)
+        if (len(cell.possible_values) != 1):
+            self.explain_exclusions(cell, nums_in_box, 'box', cell.box)
+#        print('Possible values: ' + str(cell.possible_values))
+#
+#        if (len(cell.possible_values) != 1):
+#            self.multi_cell_compare(cell, row, 'row')
+#        if (len(cell.possible_values) != 1):
+#            self.multi_cell_compare(cell, col, 'col')
             
+        if (len(cell.possible_values) != 1):
+            self.grid_cell_exclusions(cell, box)
+        
+        # If only 1 possible number, set cell value as that, and update row, col, and box possibilities, and remove from solved cells. 
+        # otherwise, continue
+        if len(cell.possible_values) == 1:
+            cell.value = cell.possible_values[0]
+            row.impossible_values.append(cell.value) # Probably better to use a set for impossible values, to avoid duplicate values being entered.
+            col.impossible_values.append(cell.value)
+            box.impossible_values.append(cell.value)
+            self.solved_cells.append(cell)
+            print('Solved this cell') # input logic to deal with correct cell later. 
+            input ('Press enter to continue')
+
+            for row_cell in row.cells:
+                self.solve_cell(row_cell)
+            for col_cell in col.cells:
+                self.solve_cell(col_cell)
+            for box_cell in box.cells:
+                self.solve_cell(box_cell)
+                
+            
+        else:
+            print('Could not solve cell, continuing to next empty cell...')
+            input('Press enter to continue 1')
+            return 
+
             
     def iterate(self):
         self.changed_during_iteration = False
-        solved_cells = []
-        iterate_count = 0
         
         # Loops through each unsolved cell in the game board, and tries to solve.
         for cell in self.unsolved_cells:
-            
-            print('Now trying to solve cell: ' + str(cell.cell_id))
-            print('Starting possible values: ' + str(cell.possible_values))
-            
-            # easier to understand code if I give the impossible values names
-            row = self.rows[cell.row-1]
-            col = self.cols[cell.col-1]
-            box = self.boxes[cell.box-1]
-            
-            nums_in_row = row.impossible_values
-            nums_in_col = col.impossible_values
-            nums_in_box = box.impossible_values
-
-            if (len(cell.possible_values) != 1):
-                self.explain_exclusions(cell, nums_in_row, 'row', cell.row)
-            if (len(cell.possible_values) != 1):
-                self.explain_exclusions(cell, nums_in_col, 'column', cell.col)
-            if (len(cell.possible_values) != 1):
-                self.explain_exclusions(cell, nums_in_box, 'box', cell.box)
-            print('Possible values: ' + str(cell.possible_values))
-
-            if (len(cell.possible_values) != 1):
-                self.multi_cell_compare(cell, row, 'row')
-            if (len(cell.possible_values) != 1):
-                self.multi_cell_compare(cell, col, 'col')
-            
-            # If only 1 possible number, set cell value as that, and update row, col, and box possibilities, and remove from solved cells. 
-            # otherwise, continue
-            if len(cell.possible_values) == 1:
-                cell.value = cell.possible_values[0]
-                row.impossible_values.append(cell.value)
-                col.impossible_values.append(cell.value)
-                box.impossible_values.append(cell.value)
-                solved_cells.append(cell)
-                print('Solved this cell') # input logic to deal with correct cell later. 
-            
-            # Check if we can solve any row, grid, or column given the cell we just solved. 
-            check_obj(row)
-            check_obj(col)
-            check_obj(box)
-            
-            
+            if (np.isnan(cell.value) == False): # In case it was solved in a previous recursion instance
+                self.solved_cells.append(cell)
             else:
-                print('Could not solve cell, continuing to next empty cell...')
-
-            if (self.changed_during_iteration == False):
-                print('Warning: No changes detected during iteration')
-
-            input('Press enter to continue')
-            cls()
-            self.print_grid()
-            iterate_count += 1
-#            if (iterate_count > 6):
-#                break
+                self.solve_cell(cell)
         
-        for cell in solved_cells:
-            self.unsolved_cells.remove(cell)                    
+        for cell in self.solved_cells:
+            try:
+                self.unsolved_cells.remove(cell)          
+            except ValueError:
+                continue
         
-
             # Since the more populated a row, grid, or column is, the more information  
             # it provides on a first run, I should dynamically go through them. But that optimization 
             # can come later. 
@@ -331,13 +423,13 @@ input_grid = np.array([[n,n,8,2,n,n,9,n,3],
 #                       [n,n,n,n,n,n,n,n,n]]) 
     
 game_grid = process_starting_input(input_grid)
-game_grid.print_grid()
 iter_count = 1
 
 while True:
-    
     game_grid.iterate()
+    cls()
     print('Completed iteration # ' + str(iter_count))
+    game_grid.print_grid()      
     iter_count += 1
     # Check if it has been solved or not
     if (len(game_grid.unsolved_cells) == 0):
@@ -347,7 +439,6 @@ while True:
         print('No changes were made during the previous iteration - no unique solution found')
         break
     
-
 # Step 1 - simple logic: For each cell in each row, check row, column and grid, and exclude possibilities. If only 1 left after all 3 checks, assign value, update, and show plot. 
 
 # Okay. Add code so that if there is only 1 element in each row, column, or box, it automatically solves it instead of going in order, then comes back to where it was. 
