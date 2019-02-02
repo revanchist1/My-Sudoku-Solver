@@ -210,32 +210,38 @@ class grid:
                 row_num = cell.row
                 col_num = cell.col
                 
+                print('Cell row num: ' + str(row_num))
+                print('Cell column num: ' + str(col_num))
+                
                 # Step 1. Functionality to check correct rows and columns 
                 col1_idx = 0
                 col2_idx = 0
                 row1_idx = 0
                 row2_idx = 0
                 
-                if (col_num % 3 == 0):
-                    col1_idx = col_num - 2
-                    col2_idx = col_num - 1
-                elif (col_num % 3 == 1):
-                    col1_idx = col_num + 1
-                    col2_idx = col_num + 2
+                if (col_num % 3 == 0): # If column = 3,6,9
+                    col1_idx = col_num - 2 # col 1,4,7 
+                    col2_idx = col_num - 1 # col 2,5,8
+                elif (col_num % 3 == 1):        
+                    col1_idx = col_num + 1 # col 2, 5, 8
+                    col2_idx = col_num + 2 # col 3, 6, 9
                 elif (col_num % 3 == 2):
-                    col1_idx = col_num - 1
-                    col2_idx = col_num + 1
+                    col1_idx = col_num - 1 # col 1, 4, 7
+                    col2_idx = col_num + 1 # col 3, 6, 9
+                col1cell = self.rows[cell.row-1].cells[col1_idx-1]
+                col2cell = self.rows[cell.row-1].cells[col2_idx-1]
                     
-                if (row_num % 3 == 0):
-                    row1_idx = row_num - 2
+                if (row_num % 3 == 0): # If row = 3, 6, 9
+                    row1_idx = row_num - 2 # row 1, 4, 7
                     row2_idx = row_num - 1
                 elif (row_num % 3 == 1):
                     row1_idx = row_num + 1
                     row2_idx = row_num + 2
                 elif (row_num % 3 == 2):
                     row1_idx = row_num - 1
-                    row2_idx = row_num + 1
-                    
+                    row2_idx = row_num + 1 
+                row1cell = self.cols[cell.col-1].cells[row1_idx-1]
+                row2cell = self.cols[cell.col-1].cells[row2_idx-1]
 #                print('Relevant column indices: ' + str(col1_idx) + ', ' + str(col2_idx))
 #                print('Relevant row indices: ' + str(row1_idx) + ', ' + str(row2_idx))
                 
@@ -244,15 +250,14 @@ class grid:
                 col1vals = self.cols[col1_idx-1].impossible_values
                 col2vals = self.cols[col2_idx-1].impossible_values
                 
-                row1cell = self.rows[row1_idx-1].cells[row1_idx-1]
-                row2cell = self.rows[row2_idx-1].cells[row2_idx-1]
-                col1cell = self.cols[col1_idx-1].cells[col1_idx-1]
-                col2cell = self.cols[col2_idx-1].cells[col2_idx-1]
-                
-                print('row1cell id: ' + row1cell.cell_id)
-                print('row2cell id: ' + row2cell.cell_id)
-                print('col1cell id: ' + col1cell.cell_id)
-                print('col2cell id: ' + col2cell.cell_id)
+                print('row1_idx: ' + str(row1_idx))
+                print('row2_idx: ' + str(row2_idx))
+                print('row1cell id: ' + str(row1cell.cell_id))
+                print('row2cell id: ' + str(row2cell.cell_id))
+                print('col1_idx: ' + str(col1_idx))
+                print('col2_idx: ' + str(col2_idx))
+                print('col1cell id: ' + str(col1cell.cell_id))
+                print('col2cell id: ' + str(col2cell.cell_id))
           
                 case1 = val in row1vals and val in row2vals and val in col1vals and val in col2vals
                 case2 = val in row1vals and val in row2vals and np.isnan(col1cell.value) == False and np.isnan(col2cell.value) == False
@@ -336,7 +341,6 @@ class grid:
                 self.solve_cell(col_cell)
             for box_cell in box.cells:
                 self.solve_cell(box_cell)
-                
             
         else:
             print('Could not solve cell, continuing to next empty cell...')
