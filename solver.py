@@ -191,95 +191,89 @@ class grid:
         # Step 2: Loop over all other cells in the box 
         # Step 3: Check if the current possible value can be excluded based on row and column of all other cells in the grid 
         # Step 4: If the posible value can only eixst in that cell, then update the current value 
-        
-        vals_in_box = []
-        
-        for box_cell in box_obj.cells:
-            if (np.isnan(box_cell.value) == False):
-                vals_in_box.append(box_cell.value)
-                continue 
-            for val in cell.possible_values:
-                if (cell == box_cell or val in vals_in_box):
-                    continue
                 
-                # Edge case, one is false, but the cell in that row is full. 
-                # Edge case 1: Can't be in both rows, and 2 other column cells are full (along the row)
-                # Edge case 2: Can't be in both columns, but 2 other row cells are full (along the column)
+        for val in cell.possible_values:
+            
+            # Edge case, one is false, but the cell in that row is full. 
+            # Edge case 1: Can't be in both rows, and 2 other column cells are full (along the row)
+            # Edge case 2: Can't be in both columns, but 2 other row cells are full (along the column)
+            
+            # Get row num and column num 
+            row_num = cell.row
+            col_num = cell.col
+            
+            # Step 1. Functionality to check correct rows and columns 
+            col1_idx = 0
+            col2_idx = 0
+            row1_idx = 0
+            row2_idx = 0
+            
+            if (col_num % 3 == 0): # If column = 3,6,9
+                col1_idx = col_num - 2 # col 1,4,7 
+                col2_idx = col_num - 1 # col 2,5,8
+            elif (col_num % 3 == 1):        
+                col1_idx = col_num + 1 # col 2, 5, 8
+                col2_idx = col_num + 2 # col 3, 6, 9
+            elif (col_num % 3 == 2):
+                col1_idx = col_num - 1 # col 1, 4, 7
+                col2_idx = col_num + 1 # col 3, 6, 9
+            col1cell = self.rows[cell.row-1].cells[col1_idx-1]
+            col2cell = self.rows[cell.row-1].cells[col2_idx-1]
                 
-                # Get row num and column num 
-                row_num = cell.row
-                col_num = cell.col
-                
-                print('Cell row num: ' + str(row_num))
-                print('Cell column num: ' + str(col_num))
-                
-                # Step 1. Functionality to check correct rows and columns 
-                col1_idx = 0
-                col2_idx = 0
-                row1_idx = 0
-                row2_idx = 0
-                
-                if (col_num % 3 == 0): # If column = 3,6,9
-                    col1_idx = col_num - 2 # col 1,4,7 
-                    col2_idx = col_num - 1 # col 2,5,8
-                elif (col_num % 3 == 1):        
-                    col1_idx = col_num + 1 # col 2, 5, 8
-                    col2_idx = col_num + 2 # col 3, 6, 9
-                elif (col_num % 3 == 2):
-                    col1_idx = col_num - 1 # col 1, 4, 7
-                    col2_idx = col_num + 1 # col 3, 6, 9
-                col1cell = self.rows[cell.row-1].cells[col1_idx-1]
-                col2cell = self.rows[cell.row-1].cells[col2_idx-1]
-                    
-                if (row_num % 3 == 0): # If row = 3, 6, 9
-                    row1_idx = row_num - 2 # row 1, 4, 7
-                    row2_idx = row_num - 1
-                elif (row_num % 3 == 1):
-                    row1_idx = row_num + 1
-                    row2_idx = row_num + 2
-                elif (row_num % 3 == 2):
-                    row1_idx = row_num - 1
-                    row2_idx = row_num + 1 
-                row1cell = self.cols[cell.col-1].cells[row1_idx-1]
-                row2cell = self.cols[cell.col-1].cells[row2_idx-1]
+            if (row_num % 3 == 0): # If row = 3, 6, 9
+                row1_idx = row_num - 2 # row 1, 4, 7
+                row2_idx = row_num - 1
+            elif (row_num % 3 == 1):
+                row1_idx = row_num + 1
+                row2_idx = row_num + 2
+            elif (row_num % 3 == 2):
+                row1_idx = row_num - 1
+                row2_idx = row_num + 1 
+            row1cell = self.cols[cell.col-1].cells[row1_idx-1]
+            row2cell = self.cols[cell.col-1].cells[row2_idx-1]
 #                print('Relevant column indices: ' + str(col1_idx) + ', ' + str(col2_idx))
 #                print('Relevant row indices: ' + str(row1_idx) + ', ' + str(row2_idx))
-                
-                row1vals = self.rows[row1_idx-1].impossible_values
-                row2vals = self.rows[row2_idx-1].impossible_values
-                col1vals = self.cols[col1_idx-1].impossible_values
-                col2vals = self.cols[col2_idx-1].impossible_values
-                
-                print('row1_idx: ' + str(row1_idx))
-                print('row2_idx: ' + str(row2_idx))
-                print('row1cell id: ' + str(row1cell.cell_id))
-                print('row2cell id: ' + str(row2cell.cell_id))
-                print('col1_idx: ' + str(col1_idx))
-                print('col2_idx: ' + str(col2_idx))
-                print('col1cell id: ' + str(col1cell.cell_id))
-                print('col2cell id: ' + str(col2cell.cell_id))
-          
-                case1 = val in row1vals and val in row2vals and val in col1vals and val in col2vals
-                case2 = val in row1vals and val in row2vals and np.isnan(col1cell.value) == False and np.isnan(col2cell.value) == False
-                case3 = val in col1vals and val in col2vals and np.isnan(row1cell.value) == False and np.isnan(row2cell.value) == False
-                
-                print('Current value of interest: ' + str(val))
-                
-                print('row1vals: ' + str(row1vals) + ' val in row1vals: ' + str(val in row1vals))
-                print('row2vals: ' + str(row2vals) + ' val in row2vals: ' + str(val in row2vals))
-                print('col1vals: ' + str(col1vals) + ' val in col1vals: ' + str(val in col1vals))
-                print('col2vals: ' + str(col2vals) + ' val in col2vals: ' + str(val in col2vals))
-                
-                print('case1: ' + str(case1))
-                print('case2: ' + str(case2))
-                print('case3: ' + str(case3))
-                
-                # If the current possible value is impossible in all 4 of the above, then assign value to this cell. 
-                if (case1 or case2 or case3):
-                    print('val: ' + str(val) + ' cannot be in any row or column and is therefore in this cell')
-                    cell.possible_values = [val]
-                    return
-                input ('Press enter to continue')
+            
+            row1vals = self.rows[row1_idx-1].impossible_values
+            row2vals = self.rows[row2_idx-1].impossible_values
+            col1vals = self.cols[col1_idx-1].impossible_values
+            col2vals = self.cols[col2_idx-1].impossible_values
+            
+#                print('row1_idx: ' + str(row1_idx))
+#                print('row2_idx: ' + str(row2_idx))
+#                print('row1cell id: ' + str(row1cell.cell_id))
+#                print('row2cell id: ' + str(row2cell.cell_id))
+#                print('col1_idx: ' + str(col1_idx))
+#                print('col2_idx: ' + str(col2_idx))
+#                print('col1cell id: ' + str(col1cell.cell_id))
+#                print('col2cell id: ' + str(col2cell.cell_id))
+      
+            case1 = val in row1vals and val in row2vals and val in col1vals and val in col2vals
+            case2 = val in row1vals and val in row2vals and np.isnan(col1cell.value) == False and np.isnan(col2cell.value) == False
+            case3 = val in col1vals and val in col2vals and np.isnan(row1cell.value) == False and np.isnan(row2cell.value) == False
+            
+            print('Current value of interest: ' + str(val))
+            
+#                print('row1vals: ' + str(row1vals) + ' val in row1vals: ' + str(val in row1vals))
+#                print('row2vals: ' + str(row2vals) + ' val in row2vals: ' + str(val in row2vals))
+#                print('col1vals: ' + str(col1vals) + ' val in col1vals: ' + str(val in col1vals))
+#                print('col2vals: ' + str(col2vals) + ' val in col2vals: ' + str(val in col2vals))
+            
+#                print('case1: ' + str(case1))
+#                print('case2: ' + str(case2))
+#                print('case3: ' + str(case3))
+            if (case1 == True):
+                print('Cell ' + str(cell.cell_id) + ' can only be ' + str(val) + ' because there are ' + str(val) + '\'s in rows ' + str(row1_idx) + ' and ' + str(row2_idx) + ' and columns ' + str(col1_idx) + ' and ' + str(col2_idx))
+            elif (case2 == True):
+                print('Cell ' + str(cell.cell_id) + ' can only be ' + str(val) + ' because there are ' + str(val) + '\'s in rows ' + str(row1_idx) + ' and ' + str(row2_idx) + ' and cells ' + str(col1cell.cell_id) + ' and ' + str(col2cell.cell_id) + ' are already populated')
+            elif (case3 == True):
+                print('Cell ' + str(cell.cell_id) + ' can only be ' + str(val) + ' because there are ' + str(val) + '\'s in columns ' + str(col1_idx) + ' and ' + str(col2_idx) + ' and cells ' + str(row1cell.cell_id) + ' and ' + str(row2cell.cell_id) + ' are already populated')
+ 
+            # If the current possible value is impossible in all 4 of the above, then assign value to this cell. 
+            if (case1 or case2 or case3):
+                cell.possible_values = [val]
+                return
+            input ('Press enter to continue')
 
 
                 # Need to get rows 
@@ -314,8 +308,8 @@ class grid:
 #            self.explain_exclusions(cell, nums_in_col, 'column', cell.col)
         if (len(cell.possible_values) != 1):
             self.explain_exclusions(cell, nums_in_box, 'box', cell.box)
-#        print('Possible values: ' + str(cell.possible_values))
-#
+        print('Possible values: ' + str(cell.possible_values))
+
 #        if (len(cell.possible_values) != 1):
 #            self.multi_cell_compare(cell, row, 'row')
 #        if (len(cell.possible_values) != 1):
