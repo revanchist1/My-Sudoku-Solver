@@ -226,7 +226,7 @@ class grid:
 #            print('cells_to_ignore: ' + str(len(cells_to_ignore)))
 #            print('cells_to_ignore_ids: ' + str(cells_to_ignore_ids))
             
-            explanation_string = 'Since cells ' + str(cells_to_ignore_ids) + ' can each only contain one of ' + str(cell.possible_values) + ', then cell(s) ' + str(cells_to_update_ids) + ' cannot contain these values.' 
+            explanation_string = 'Since cells ' + str(sorted(cells_to_ignore_ids)) + ' can each only contain one of ' + str(cell.possible_values) + ', then cell(s) ' + str(cells_to_update_ids) + ' cannot contain these values.' 
             
             if (len(cells_to_ignore)==count and count > 1 and len(cells_to_ignore[0].possible_values) == count):
                 for curr_cell in cells_to_update:
@@ -457,8 +457,25 @@ class grid:
             col.impossible_values.append(cell.value)
             box.impossible_values.append(cell.value)
             self.solved_cells.append(cell)
+            
             print('Solved this cell') # input logic to deal with correct cell later. 
             input ('Press enter to continue')
+            
+            # Check the number of impossible values in the column and box (and row only if the row # is before the current cells).  
+            # If there's only 1 unsolved value, recursively solve that first. 
+            if (len(row.impossible_values) == 8):
+                for rc in row.cells:
+                    if (np.isnan(rc.value) and rc.cell_id[1] < cell.cell_id[1]): 
+                        self.solve_cell(rc)
+            if (len(col.impossible_values) == 8):
+                for cc in col.cells:
+                    if (np.isnan(cc.value)):
+                        self.solve_cell(cc)
+            if (len(box.impossible_values) == 8):
+                for bc in box.cells:
+                    if (np.isnan(bc.value)):
+                        self.solve_cell(bc)
+
 
             # Recursion is fancy, but it is not intuitive for a human, and the objective is to have an interpretable sudoku solver. 
 #            for row_cell in row.cells:
@@ -531,25 +548,25 @@ def process_starting_input(inp):
 
 # Step 1. Read in puzzle, and fill in rows, grids, and cells. 
 n = np.nan
-input_grid = np.array([[n,n,8,2,n,n,9,n,3],
-                       [3,4,2,n,9,5,n,n,7],
-                       [1,9,7,n,n,n,n,n,4],
-                       [n,n,5,3,1,2,4,7,9],
-                       [n,n,n,n,n,n,n,n,n],
-                       [2,n,n,n,7,4,5,n,n],
-                       [n,2,n,n,n,1,n,n,5],
-                       [n,7,n,n,n,6,8,9,1],
-                       [8,n,n,4,3,n,7,n,6]]) 
+#input_grid = np.array([[n,n,8,2,n,n,9,n,3],   # Case # 1 Tested
+#                       [3,4,2,n,9,5,n,n,7],
+#                       [1,9,7,n,n,n,n,n,4],
+#                       [n,n,5,3,1,2,4,7,9],
+#                       [n,n,n,n,n,n,n,n,n],
+#                       [2,n,n,n,7,4,5,n,n],
+#                       [n,2,n,n,n,1,n,n,5],
+#                       [n,7,n,n,n,6,8,9,1],
+#                       [8,n,n,4,3,n,7,n,6]]) 
 
-#input_grid = np.array([[1,n,n,n,n,n,n,n,n],
-#                       [n,n,n,n,n,n,n,n,n],
-#                       [n,n,n,n,n,n,n,n,n],
-#                       [n,n,n,n,n,n,n,n,n],
-#                       [n,n,n,n,n,n,n,n,n],
-#                       [n,n,n,n,n,n,n,n,n],
-#                       [n,n,n,n,n,n,n,n,n],
-#                       [n,n,n,n,n,n,n,n,n],
-#                       [n,n,n,n,n,n,n,n,n]]) 
+input_grid = np.array([[n,5,n,n,n,n,n,3,8],
+                       [n,n,n,n,2,8,n,n,7], # If the 7 at the end of this row was absent, it is not capable of solving for it, yet I could determine that was either 1 or 7 based on the other cells. Still needs some work!
+                       [n,n,4,n,n,n,n,n,n],
+                       [n,n,n,3,5,1,n,8,n],
+                       [8,n,n,n,6,n,7,n,n],
+                       [n,n,n,n,n,n,n,1,n],
+                       [7,n,3,n,n,n,9,n,n],
+                       [n,n,n,n,9,2,n,n,n],
+                       [n,2,n,n,n,4,1,6,n]]) 
     
 game_grid = process_starting_input(input_grid)
 iter_count = 1
@@ -558,7 +575,6 @@ while True:
     game_grid.iterate()
     cls()
     print('Completed iteration # ' + str(iter_count))
-    game_grid.print_grid()      
     iter_count += 1
     # Check if it has been solved or notf
     if (len(game_grid.unsolved_cells) == 0):
@@ -566,7 +582,7 @@ while True:
         break
     elif (game_grid.changed_during_iteration == False):
         print('No changes were made during the previous iteration - no unique solution found')
-        break
+        #break
     
 # Step 1 - simple logic: For each cell in each row, check row, column and grid, and exclude possibilities. If only 1 left after all 3 checks, assign value, update, and show plot. 
 
