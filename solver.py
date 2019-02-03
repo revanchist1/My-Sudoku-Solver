@@ -30,6 +30,7 @@ class cell:
         self.col = np.nan # Column number, ranges from 1-9 as defined below
         self.box = np.nan # Box number, ranges from 1-9 as defined below 
         self.cell_id = (row,col)
+        self.multi_cell_excluded = False # Has the cell already been excluded based on the multi-cell function analysis? If so, don't show it again 
 
 # Row, col, and box are essentially the same class. I can simplify the code by only using one class for these 3. 
 class row: 
@@ -121,7 +122,7 @@ class grid:
                     exc_string += str(num) + ', '
 
         if (exc_count > 0):
-            print('Cannot be ' + exc_string + ' because ' + pronoun + ' already in ' + celltype + ' # ' + str(cellnum))
+            #print('Cannot be ' + exc_string + ' because ' + pronoun + ' already in ' + celltype + ' # ' + str(cellnum))
             cell.temporary_possible_values.sort()
             self.changed_during_iteration = True
         
@@ -218,26 +219,30 @@ class grid:
                     cells_to_ignore_ids.append(curr_cell.cell_id)
                     count += 1
                 else:
-                    cells_to_update.append(curr_cell)
-                    cells_to_update_ids.append(curr_cell.cell_id)
-            
+                    if (curr_cell.multi_cell_excluded == False):
+                        cells_to_update.append(curr_cell)
+                        cells_to_update_ids.append(curr_cell.cell_id)
 #            print('count: ' + str(count))
 #            print('cells_to_ignore: ' + str(len(cells_to_ignore)))
 #            print('cells_to_ignore_ids: ' + str(cells_to_ignore_ids))
             
-            explanation_string = 'Since cells ' + str(cells_to_ignore_ids) + ' can each only contain one of ' + str(cell.possible_values) + ', then cells ' + str(cells_to_update_ids) + ' cannot contain these values.' 
+            explanation_string = 'Since cells ' + str(cells_to_ignore_ids) + ' can each only contain one of ' + str(cell.possible_values) + ', then cell(s) ' + str(cells_to_update_ids) + ' cannot contain these values.' 
             
             if (len(cells_to_ignore)==count and count > 1 and len(cells_to_ignore[0].possible_values) == count):
                 for curr_cell in cells_to_update:
                     if (np.isnan(curr_cell.value) == False):
                         continue
+                    #print('Curr_cell: ' + str(curr_cell.cell_id) + ' possible values: ' + str(curr_cell.possible_values))
+                    #print('Curr_cell multi_cell_excluded: ' + str(curr_cell.multi_cell_excluded))
                     for val in cell.possible_values:
                         try:
                             curr_cell.possible_values.remove(val)
+                            curr_cell.multi_cell_excluded = True
                             self.changed_during_iteration = True
                         except ValueError:
                             pass
                     #print('Cell ' + str(curr_cell.cell_id) + ' cannot be any of ' + str(cell.possible_values) + ' because of cells: ' + str(cells_to_ignore_ids))
+              
                 if (len(cells_to_update_ids) > 0):
                     print(explanation_string)
                     print('')
@@ -247,29 +252,43 @@ class grid:
         # Rather than having a specific function for rows, columns, and cells, I will have a generic one for all 3. 
         relevant_cells = [] # stores all other empty cells in row, column, or box
         
+#        if (obj_name == 'box'):
+#            print('Inside object cell exclusions for ' + obj_name)
+        
         for obj_cell in obj.cells:
             if(np.isnan(obj_cell.value) == False or obj_cell == cell):
                 continue
-            print('Currently analyzing cell: ' + str(obj_cell.cell_id) + ' for impossible values')
-            print(obj_name + ' cell: ' + str(obj_cell.cell_id) + ' temporary possible values: ' + str(obj_cell.temporary_possible_values))
+            #print('Currently analyzing cell: ' + str(obj_cell.cell_id) + ' for impossible values')
+            #print(obj_name + ' cell: ' + str(obj_cell.cell_id) + ' temporary possible values: ' + str(obj_cell.temporary_possible_values))
             self.explain_temporary_exclusions(obj_cell, self.rows[obj_cell.row-1].impossible_values, 'row', obj_cell.row)
             self.explain_temporary_exclusions(obj_cell, self.cols[obj_cell.col-1].impossible_values, 'col', obj_cell.col)
             self.explain_temporary_exclusions(obj_cell, self.boxes[obj_cell.box-1].impossible_values, 'box', obj_cell.box)
-            print('Updated ' + obj_name + ' cell temporary possible values: ' + str(obj_cell.temporary_possible_values))
+            #print('Updated ' + obj_name + ' cell temporary possible values: ' + str(obj_cell.temporary_possible_values))
             relevant_cells.append(obj_cell)
+            
+#        if (len(relevant_cells) > 0):
+#            for c in relevant_cells:
+#                print('Relevant cell: ' + str(c.cell_id))
         
         for val in cell.possible_values:  # 2 or 8
-            print('Now checking if cell : ' + str(cell.cell_id) + ' is ' + str(val))
+            #print('Now checking if cell : ' + str(cell.cell_id) + ' is ' + str(val))
             is_value_impossible_in_other_cells = True
             for rel_cell in relevant_cells:
+                #print('Relevant cell under consideration: ' + str(rel_cell.cell_id))
+                #print('Relevant cell possible values: ' + str(rel_cell.temporary_possible_values))
                 if (val in rel_cell.temporary_possible_values):
                     is_value_impossible_in_other_cells = False
-                    print('Since ' + str(val) + ' could be in cell: ' + str(rel_cell.cell_id) + ', we cannot be certain that it is in cell: ' + str(cell.cell_id))
-                    rel_cell.temporary_possible_values = [1,2,3,4,5,6,7,8,9] # Reset temporary possible values for now
-            if (is_value_impossible_in_other_cells == True):
+                    #print('Since ' + str(val) + ' could also be in cell: ' + str(rel_cell.cell_id) + ', we cannot be certain that it is in cell: ' + str(cell.cell_id))
+                    break
+            if (is_value_impossible_in_other_cells == False):
+                continue
+            else:
                 # We know the current value of interest cannot be in any of the other empty cells, therefore it must go into the current cell
-                print('Since ' + str(val) + ' could not be in any other cell(s) in this ' + obj_name + ', we know that it must be in this cell.')
+                print('Since ' + str(val) + ' could not be in any other cell(s) in this ' + obj_name + ', we know that it must be in cell: ' + str(cell.cell_id))
                 cell.possible_values = [val]
+                # Reset relevant cell possible temporary values
+                for rel_cell in relevant_cells:
+                    rel_cell.temporary_possible_values = [1,2,3,4,5,6,7,8,9] # Reset temporary possible values for now
                 return 
         
     def grid_cell_exclusions(self, cell, box_obj):
@@ -344,7 +363,7 @@ class grid:
             case6 = val in row1vals and val in row2vals and val in col1vals and np.isnan(col2cell.value) == False
             case7 = val in row1vals and val in row2vals and val in col2vals and np.isnan(col1cell.value) == False
             
-            print('Current value of interest: ' + str(val))
+            #print('Current value of interest: ' + str(val))
             
 #                print('row1vals: ' + str(row1vals) + ' val in row1vals: ' + str(val in row1vals))
 #                print('row2vals: ' + str(row2vals) + ' val in row2vals: ' + str(val in row2vals))
@@ -375,7 +394,7 @@ class grid:
             if (case1 or case2 or case3 or case4 or case5 or case6 or case7):
                 cell.possible_values = [val]
                 return
-            input ('Press enter to continue')
+            #input ('Press enter to continue')
 
 
                 # Need to get rows 
@@ -411,22 +430,24 @@ class grid:
         if (len(cell.possible_values) != 1):
             self.explain_exclusions(cell, nums_in_box, 'box', cell.box)
         print('Possible values: ' + str(cell.possible_values))
-
-#        if (len(cell.possible_values) != 1):
-#            self.multi_cell_compare(cell, row, 'row')
-#        if (len(cell.possible_values) != 1):
-#            self.multi_cell_compare(cell, col, 'col')
-#        if (len(cell.possible_values) != 1):
-#            self.multi_cell_compare(cell, box, 'box')
-        # Need multi-cell box solver as well, e.g. see cell (6,3) using left to right solution
-            
-
-#        if (len(cell.possible_values) != 1):
-#            self.row_cell_exclusions(cell, row)
+        
         if (len(cell.possible_values) != 1):
-            self.object_cell_exclusions(cell, col, 'col')
-#        if (len(cell.possible_values) != 1):
-#            self.grid_cell_exclusions(cell, box)
+            self.object_cell_exclusions(cell, row, 'row')
+        if (len(cell.possible_values) != 1):
+            self.object_cell_exclusions(cell, col, 'column')
+        if (len(cell.possible_values) != 1):
+            self.object_cell_exclusions(cell, box, 'box')
+            
+        if (len(cell.possible_values) != 1): # Have a different function for this so it can be more interpretable (in case first one fails) 
+            self.grid_cell_exclusions(cell, box)
+
+        if (len(cell.possible_values) != 1):
+            self.multi_cell_compare(cell, row, 'row')
+        if (len(cell.possible_values) != 1):
+            self.multi_cell_compare(cell, col, 'col')
+        if (len(cell.possible_values) != 1):
+            self.multi_cell_compare(cell, box, 'box')
+        # Need multi-cell box solver as well, e.g. see cell (6,3) using left to right solution
             
         # If only 1 possible number, set cell value as that, and update row, col, and box possibilities, and remove from solved cells. 
         # otherwise, continue
@@ -457,9 +478,6 @@ class grid:
         
         # Loops through each unsolved cell in the game board, and tries to solve.
         for cell in self.unsolved_cells:
-            if (cell.cell_id != (5,9)):
-                continue
-            
             if (np.isnan(cell.value) == False): # In case it was solved in a previous recursion instance
                 self.solved_cells.append(cell)
             else:
