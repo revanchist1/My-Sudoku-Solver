@@ -50,6 +50,8 @@ class box:
         self.position = np.nan # ranges from 1-9, 1 2 3 | 4 5 6| 7 8 9 
         self.cells = []
         self.impossible_values = []
+    
+# Can reset previous multi_cell_description flag inside solve. 
         
 class grid:
     def __init__(self):
@@ -219,9 +221,9 @@ class grid:
                     cells_to_ignore_ids.append(curr_cell.cell_id)
                     count += 1
                 else:
-                    if (curr_cell.multi_cell_excluded == False):
-                        cells_to_update.append(curr_cell)
-                        cells_to_update_ids.append(curr_cell.cell_id)
+                    #if (curr_cell.multi_cell_excluded == False):
+                    cells_to_update.append(curr_cell)
+                    cells_to_update_ids.append(curr_cell.cell_id)
 #            print('count: ' + str(count))
 #            print('cells_to_ignore: ' + str(len(cells_to_ignore)))
 #            print('cells_to_ignore_ids: ' + str(cells_to_ignore_ids))
@@ -288,6 +290,7 @@ class grid:
                 cell.possible_values = [val]
                 # Reset relevant cell possible temporary values
                 for rel_cell in relevant_cells:
+                    print(str(rel_cell.cell_id) + ' possible values: ' + str(rel_cell.temporary_possible_values))
                     rel_cell.temporary_possible_values = [1,2,3,4,5,6,7,8,9] # Reset temporary possible values for now
                 return 
         
@@ -558,15 +561,25 @@ n = np.nan
 #                       [n,7,n,n,n,6,8,9,1],
 #                       [8,n,n,4,3,n,7,n,6]]) 
 
-input_grid = np.array([[n,5,n,n,n,n,n,3,8],
-                       [n,n,n,n,2,8,n,n,7], # If the 7 at the end of this row was absent, it is not capable of solving for it, yet I could determine that was either 1 or 7 based on the other cells. Still needs some work!
-                       [n,n,4,n,n,n,n,n,n],
-                       [n,n,n,3,5,1,n,8,n],
-                       [8,n,n,n,6,n,7,n,n],
-                       [n,n,n,n,n,n,n,1,n],
-                       [7,n,3,n,n,n,9,n,n],
-                       [n,n,n,n,9,2,n,n,n],
-                       [n,2,n,n,n,4,1,6,n]]) 
+#input_grid = np.array([[n,5,n,n,n,n,n,3,8], # Current test on phone. Need to implement and understand X wing strategy first. Will practice with other puzzles. 
+#                       [n,n,n,n,2,8,n,n,n], # If the 7 at the end of this row was absent, it is not capable of solving for it, yet I could determine that was either 1 or 7 based on the other cells. Still needs some work!
+#                       [n,n,4,n,n,n,n,n,n],
+#                       [n,n,n,3,5,1,n,8,n],
+#                       [8,n,n,n,6,n,7,n,n],
+#                       [n,n,n,n,n,n,n,1,n],
+#                       [7,n,3,n,n,n,9,n,n],
+#                       [n,n,n,n,9,2,n,n,n],
+#                       [n,2,n,n,n,4,1,6,n]]) 
+    
+input_grid = np.array([[n,n,n,4,n,n,6,n,2], # Current test on phone. Need to implement and understand X wing strategy first. Will practice with other puzzles. 
+                       [n,n,6,n,n,n,1,n,n], # If the 7 at the end of this row was absent, it is not capable of solving for it, yet I could determine that was either 1 or 7 based on the other cells. Still needs some work!
+                       [n,9,n,5,n,n,n,8,n],
+                       [n,5,n,3,n,n,n,n,n],
+                       [3,n,1,2,n,6,4,n,5],
+                       [n,n,n,n,n,7,n,2,n],
+                       [n,3,n,n,n,2,n,6,n],
+                       [n,n,4,n,n,n,9,n,n],
+                       [5,n,7,n,n,9,n,n,n]])
     
 game_grid = process_starting_input(input_grid)
 iter_count = 1
