@@ -406,6 +406,75 @@ class grid:
 #                box = self.boxes[cell.box-1]
 #                
 #                if val in impossible_values of rows above and below and left-right column:
+                
+    def x_wing(self, cell, obj, obj_name):
+        # If, for each possible value in the current cell 
+        # There is only one other cell where that value is possible in the same row (col)
+        # and there is another row (column) such that the same value is only possible in the same two columns (rows) as the first 
+        
+        x_wing_found = False
+        
+        for val in cell.possible_values:
+            val_count = 1
+            rel_cells = []
+            for obj_cell in obj.cells:
+                if (np.isnan(obj_cell.value) == False or cell==obj_cell):
+                    continue
+                if (val in obj_cell.possible_values):
+                    val_count += 1
+                    rel_cells.append(obj_cell)
+                
+            if (len(rel_cells) > 1):
+                print('More than 2 possible cells for ' + str(val) + ', cannot apply x wing here')
+                continue
+            else:
+                  # If this was a row, search through columns for another row with same properties. 
+                  # If this was a col, search through rows for another column with this same property. 
+                  # So, in the case that I've found only two possible cells in the current row for the given value 
+                  # I need to look at every other row along the two columns where the cells are empty. 
+                  # If both cells are empty, count the number of possibilities of the value of interest in that row. 
+                  
+                  # I have cell and rel_cell, which are the two columns of interest in the row case 
+                  # From these, I can access the columns of interest, then iterate along the rows 
+                  # If the first_cell or the second cell have a value, or one or the other can't contain the value of interest, continue 
+                  
+                  col1 = self.cols[cell.col-1]
+                  col2 = self.cols[rel_cells[0].col-1]
+                  
+                  for r in range(0,9): # Check the rows in the puzzle
+                      if(col1[r] == cell): # If we are the row we just checked
+                          continue
+                      if((np.isnan(col1[r]) == False or np.isnan(col2[r]) ==False)): # If either cell already has a value
+                          continue
+                      if((val in col1[r] == False) or val in col2[r] == False): # If either cell cannot hold the value of interest 
+                          continue 
+                      
+                      # If we pass the three conditions above, then we know we have a 2nd row where we might be able to apply x wing 
+                      # Next step is to check the cells in the 2nd row, and see if the value of interest can only appear in two places 
+                      
+                      row2 = self.rows[r]
+                      val_count_2 = 0
+                      rel_cells_2 = []                      
+                      
+                      
+                      # This is wrong, because I need to check through every row in the two columns first, since there might be 3 of the element of interest along the column. 
+#                      for rc in row2:
+#                          if (np.isnan(rc.value) == False):
+#                              continue
+#                          if(val in rc.possible_values):
+#                              val_count_2 += 1
+#                              rel_cells_2.append(rc)
+#                              
+#                      if (val_count_2 > 2):
+#                          continue
+#                      else: # Found an x-wing 
+#                          x_wing_found = True
+#                          # For every cell in column 1 and column 2, except for cell, obj_cell, rel_cells_2[0] and rel_cells_2[1]
+#                          # I can remove the current val from the list of possible values
+#                          
+#                          fo
+#                          
+ 
     
     def solve_cell(self, cell): 
         if (np.isnan(cell.value) == False):
@@ -441,8 +510,8 @@ class grid:
         if (len(cell.possible_values) != 1):
             self.object_cell_exclusions(cell, box, 'box')
             
-        if (len(cell.possible_values) != 1): # Have a different function for this so it can be more interpretable (in case first one fails) 
-            self.grid_cell_exclusions(cell, box)
+#        if (len(cell.possible_values) != 1): # Have a different function for this so it can be more interpretable (in case first one fails) 
+#            self.grid_cell_exclusions(cell, box)
 
         if (len(cell.possible_values) != 1):
             self.multi_cell_compare(cell, row, 'row')
@@ -450,8 +519,15 @@ class grid:
             self.multi_cell_compare(cell, col, 'col')
         if (len(cell.possible_values) != 1):
             self.multi_cell_compare(cell, box, 'box')
-        # Need multi-cell box solver as well, e.g. see cell (6,3) using left to right solution
             
+        # Every stragey before this point were things I learned from playing Sudoku over the years.    
+        # Every strategy that comes below this line was learned from: http://www.sudokuwiki.org
+
+        if (len(cell.possible_values) != 1):
+            self.x_wing(cell, row, 'row')
+        if (len(cell.possible_values) != 1):
+            self.x_wing(cell, col, 'col')
+
         # If only 1 possible number, set cell value as that, and update row, col, and box possibilities, and remove from solved cells. 
         # otherwise, continue
         if len(cell.possible_values) == 1:
@@ -571,18 +647,22 @@ n = np.nan
 #                       [n,n,n,n,9,2,n,n,n],
 #                       [n,2,n,n,n,4,1,6,n]]) 
     
-input_grid = np.array([[n,n,n,4,n,n,6,n,2], # Current test on phone. Need to implement and understand X wing strategy first. Will practice with other puzzles. 
-                       [n,n,6,n,n,n,1,n,n], # If the 7 at the end of this row was absent, it is not capable of solving for it, yet I could determine that was either 1 or 7 based on the other cells. Still needs some work!
-                       [n,9,n,5,n,n,n,8,n],
-                       [n,5,n,3,n,n,n,n,n],
-                       [3,n,1,2,n,6,4,n,5],
-                       [n,n,n,n,n,7,n,2,n],
-                       [n,3,n,n,n,2,n,6,n],
-                       [n,n,4,n,n,n,9,n,n],
-                       [5,n,7,n,n,9,n,n,n]])
+input_grid = np.array([[1,n,n,n,n,n,5,6,9], # Current test on phone. Need to implement and understand X wing strategy first. Will practice with other puzzles. 
+                       [4,9,2,n,5,6,1,n,8], # If the 7 at the end of this row was absent, it is not capable of solving for it, yet I could determine that was either 1 or 7 based on the other cells. Still needs some work!
+                       [n,5,6,1,n,9,2,4,n],
+                       [n,n,9,6,4,n,8,n,1],
+                       [n,6,4,n,1,n,n,n,n],
+                       [2,1,8,n,3,5,6,n,4],
+                       [n,4,n,5,n,n,n,1,6],
+                       [9,n,5,n,6,1,4,n,2],
+                       [6,2,1,n,n,n,n,n,5]])
     
 game_grid = process_starting_input(input_grid)
 iter_count = 1
+
+# To do list:
+# Add a function to check the input and make sure it is valid 
+# 
 
 while True:
     game_grid.iterate()
