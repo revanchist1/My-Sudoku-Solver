@@ -292,129 +292,10 @@ class grid:
                 for rel_cell in relevant_cells:
                     print(str(rel_cell.cell_id) + ' possible values: ' + str(rel_cell.temporary_possible_values))
                     rel_cell.temporary_possible_values = [1,2,3,4,5,6,7,8,9] # Reset temporary possible values for now
-                return 
-        
-    def grid_cell_exclusions(self, cell, box_obj):
-        # Okay. This function checks if a specific value can't exist in any other cell in the grid, based on the values present in other rows and columns that intersect with the grid 
-        
-        # Step 1: Loop over posible values in the cell 
-        # Step 2: Loop over all other cells in the box 
-        # Step 3: Check if the current possible value can be excluded based on row and column of all other cells in the grid 
-        # Step 4: If the posible value can only eixst in that cell, then update the current value 
-                
-        for val in cell.possible_values:
-            
-            # Edge case, one is false, but the cell in that row is full. 
-            # Edge case 1: Can't be in both rows, and 2 other column cells are full (along the row)
-            # Edge case 2: Can't be in both columns, but 2 other row cells are full (along the column)
-            
-            # Get row num and column num 
-            row_num = cell.row
-            col_num = cell.col
-            
-            # Step 1. Functionality to check correct rows and columns 
-            col1_idx = 0
-            col2_idx = 0
-            row1_idx = 0
-            row2_idx = 0
-            
-            if (col_num % 3 == 0): # If column = 3,6,9
-                col1_idx = col_num - 2 # col 1,4,7 
-                col2_idx = col_num - 1 # col 2,5,8
-            elif (col_num % 3 == 1):        
-                col1_idx = col_num + 1 # col 2, 5, 8
-                col2_idx = col_num + 2 # col 3, 6, 9
-            elif (col_num % 3 == 2):
-                col1_idx = col_num - 1 # col 1, 4, 7
-                col2_idx = col_num + 1 # col 3, 6, 9
-            col1cell = self.rows[cell.row-1].cells[col1_idx-1]
-            col2cell = self.rows[cell.row-1].cells[col2_idx-1]
-                
-            if (row_num % 3 == 0): # If row = 3, 6, 9
-                row1_idx = row_num - 2 # row 1, 4, 7
-                row2_idx = row_num - 1
-            elif (row_num % 3 == 1):
-                row1_idx = row_num + 1
-                row2_idx = row_num + 2
-            elif (row_num % 3 == 2):
-                row1_idx = row_num - 1
-                row2_idx = row_num + 1 
-            row1cell = self.cols[cell.col-1].cells[row1_idx-1]
-            row2cell = self.cols[cell.col-1].cells[row2_idx-1]
-#                print('Relevant column indices: ' + str(col1_idx) + ', ' + str(col2_idx))
-#                print('Relevant row indices: ' + str(row1_idx) + ', ' + str(row2_idx))
-            
-            row1vals = self.rows[row1_idx-1].impossible_values
-            row2vals = self.rows[row2_idx-1].impossible_values
-            col1vals = self.cols[col1_idx-1].impossible_values
-            col2vals = self.cols[col2_idx-1].impossible_values
-            
-#                print('row1_idx: ' + str(row1_idx))
-#                print('row2_idx: ' + str(row2_idx))
-#                print('row1cell id: ' + str(row1cell.cell_id))
-#                print('row2cell id: ' + str(row2cell.cell_id))
-#                print('col1_idx: ' + str(col1_idx))
-#                print('col2_idx: ' + str(col2_idx))
-#                print('col1cell id: ' + str(col1cell.cell_id))
-#                print('col2cell id: ' + str(col2cell.cell_id))
-      
-            case1 = val in row1vals and val in row2vals and val in col1vals and val in col2vals
-            case2 = val in row1vals and val in row2vals and np.isnan(col1cell.value) == False and np.isnan(col2cell.value) == False
-            case3 = val in col1vals and val in col2vals and np.isnan(row1cell.value) == False and np.isnan(row2cell.value) == False
-            case4 = val in col1vals and val in col2vals and val in row1vals and np.isnan(row2cell.value) == False
-            case5 = val in col1vals and val in col2vals and val in row2vals and np.isnan(row1cell.value) == False
-            case6 = val in row1vals and val in row2vals and val in col1vals and np.isnan(col2cell.value) == False
-            case7 = val in row1vals and val in row2vals and val in col2vals and np.isnan(col1cell.value) == False
-            
-            #print('Current value of interest: ' + str(val))
-            
-#                print('row1vals: ' + str(row1vals) + ' val in row1vals: ' + str(val in row1vals))
-#                print('row2vals: ' + str(row2vals) + ' val in row2vals: ' + str(val in row2vals))
-#                print('col1vals: ' + str(col1vals) + ' val in col1vals: ' + str(val in col1vals))
-#                print('col2vals: ' + str(col2vals) + ' val in col2vals: ' + str(val in col2vals))
-            
-#                print('case1: ' + str(case1))
-#                print('case2: ' + str(case2))
-#                print('case3: ' + str(case3))
-            if (case1 == True):
-                print('Cell ' + str(cell.cell_id) + ' can only be ' + str(val) + ' because there are ' + str(val) + '\'s in rows ' + str(row1_idx) + ' and ' + str(row2_idx) + ' and columns ' + str(col1_idx) + ' and ' + str(col2_idx))
-            elif (case2 == True):
-                print('Cell ' + str(cell.cell_id) + ' can only be ' + str(val) + ' because there are ' + str(val) + '\'s in rows ' + str(row1_idx) + ' and ' + str(row2_idx) + ' and cells ' + str(col1cell.cell_id) + ' and ' + str(col2cell.cell_id) + ' are already populated')
-            elif (case3 == True):
-                print('Cell ' + str(cell.cell_id) + ' can only be ' + str(val) + ' because there are ' + str(val) + '\'s in columns ' + str(col1_idx) + ' and ' + str(col2_idx) + ' and cells ' + str(row1cell.cell_id) + ' and ' + str(row2cell.cell_id) + ' are already populated')
-            elif (case4 == True):
-                print('Cell ' + str(cell.cell_id) + ' can only be ' + str(val) + ' because there are ' + str(val) + '\'s in columns ' + str(col1_idx) + ' and ' + str(col2_idx) + ' and row ' + str(row1_idx) + ' and cell ' + str(row2cell.cell_id) + ' is already populated')
-            elif (case5 == True):
-                print('Cell ' + str(cell.cell_id) + ' can only be ' + str(val) + ' because there are ' + str(val) + '\'s in columns ' + str(col1_idx) + ' and ' + str(col2_idx) + ' and row ' + str(row2_idx) + ' and cell ' + str(row1cell.cell_id) + ' is already populated')
-            elif (case6 == True):
-                print('Cell ' + str(cell.cell_id) + ' can only be ' + str(val) + ' because there are ' + str(val) + '\'s in rows ' + str(row1_idx) + ' and ' + str(row2_idx) + ' and column ' + str(col1_idx) + ' and cell ' + str(col2cell.cell_id) + ' is already populated')
-            elif (case7 == True):
-                print('Cell ' + str(cell.cell_id) + ' can only be ' + str(val) + ' because there are ' + str(val) + '\'s in rows ' + str(row1_idx) + ' and ' + str(row2_idx) + ' and column ' + str(col2_idx) + ' and cell ' + str(col1cell.cell_id) + ' is already populated')
-
-            # I actually needed to iterate over the cells in the grid. re-incorporate that functionality tomorrow. 
-
-            # If the current possible value is impossible in all 4 of the above, then assign value to this cell. 
-            if (case1 or case2 or case3 or case4 or case5 or case6 or case7):
-                cell.possible_values = [val]
-                return
-            #input ('Press enter to continue')
-
-
-                # Need to get rows 
-#                row = self.rows[cell.row-1]
-#                col = self.cols[cell.col-1]
-#                box = self.boxes[cell.box-1]
-#                
-#                if val in impossible_values of rows above and below and left-right column:
+                return        
                 
     def x_wing(self, cell, obj, obj_name):
-        # If, for each possible value in the current cell 
-        # There is only one other cell where that value is possible in the same row (col)
-        # and there is another row (column) such that the same value is only possible in the same two columns (rows) as the first 
-        
-        x_wing_found = False
-        
-        for val in cell.possible_values:
+        for val in cell.possible_values:            
             val_count = 1
             rel_cells = []
             for obj_cell in obj.cells:
@@ -424,57 +305,64 @@ class grid:
                     val_count += 1
                     rel_cells.append(obj_cell)
                 
-            if (len(rel_cells) > 1):
-                print('More than 2 possible cells for ' + str(val) + ', cannot apply x wing here')
-                continue
-            else:
-                  # If this was a row, search through columns for another row with same properties. 
-                  # If this was a col, search through rows for another column with this same property. 
-                  # So, in the case that I've found only two possible cells in the current row for the given value 
-                  # I need to look at every other row along the two columns where the cells are empty. 
-                  # If both cells are empty, count the number of possibilities of the value of interest in that row. 
+            if(len(rel_cells) == 1):
+                col1 = self.cols[cell.col-1]
+                col2 = self.cols[rel_cells[0].col-1]
                   
-                  # I have cell and rel_cell, which are the two columns of interest in the row case 
-                  # From these, I can access the columns of interest, then iterate along the rows 
-                  # If the first_cell or the second cell have a value, or one or the other can't contain the value of interest, continue 
-                  
-                  col1 = self.cols[cell.col-1]
-                  col2 = self.cols[rel_cells[0].col-1]
-                  
-                  for r in range(0,9): # Check the rows in the puzzle
-                      if(col1[r] == cell): # If we are the row we just checked
-                          continue
-                      if((np.isnan(col1[r]) == False or np.isnan(col2[r]) ==False)): # If either cell already has a value
-                          continue
-                      if((val in col1[r] == False) or val in col2[r] == False): # If either cell cannot hold the value of interest 
-                          continue 
-                      
-                      # If we pass the three conditions above, then we know we have a 2nd row where we might be able to apply x wing 
+                for r in range(0,9): # Check the rows in the puzzle
+                    if(col1.cells[r] == cell): # If we are the row we just checked
+                        continue
+                    if((np.isnan(col1.cells[r].value) == False or np.isnan(col2.cells[r].value) ==False)): # If either cell already has a value
+                        continue
+                    if((val in col1.cells[r].possible_values == False) or (val in col2.cells[r].possible_values == False)): # If either cell cannot hold the value of interest 
+                        continue 
+                        #print('Now checking row ' + str(r+1) + ' for value: ' + str(val))
+        
+        
+                      # If we pass the three conditions above, then we know we have a 2nd row where we might be able to identify an x wing 
                       # Next step is to check the cells in the 2nd row, and see if the value of interest can only appear in two places 
                       
-                      row2 = self.rows[r]
-                      val_count_2 = 0
-                      rel_cells_2 = []                      
-                      
-                      
-                      # This is wrong, because I need to check through every row in the two columns first, since there might be 3 of the element of interest along the column. 
-#                      for rc in row2:
-#                          if (np.isnan(rc.value) == False):
-#                              continue
-#                          if(val in rc.possible_values):
-#                              val_count_2 += 1
-#                              rel_cells_2.append(rc)
-#                              
-#                      if (val_count_2 > 2):
-#                          continue
-#                      else: # Found an x-wing 
-#                          x_wing_found = True
-#                          # For every cell in column 1 and column 2, except for cell, obj_cell, rel_cells_2[0] and rel_cells_2[1]
-#                          # I can remove the current val from the list of possible values
-#                          
-#                          fo
-#                          
- 
+                    row2 = self.rows[r]
+                    val_count_2 = 0
+                    rel_cells_2 = []                      
+                                            
+                    for rc in row2.cells:
+                        if (np.isnan(rc.value) == False):
+                            continue
+                        if(val in rc.possible_values):
+                            val_count_2 += 1
+                            rel_cells_2.append(rc)
+                                                        
+                    if (val_count_2 == 2): # I need to make sure the columns were the same 
+                        # For every cell in column 1 and column 2, except for cell, obj_cell, rel_cells_2[0] and rel_cells_2[1]
+                        # I can remove the current val from the list of possible values
+                        
+                        # Check if the columns of the two cells of interest are the same as the columns from the first row 
+                        rc1 = rel_cells_2[0].cell_id[1]
+                        rc2 = rel_cells_2[1].cell_id[1]
+                        
+                        if ((rc1 == cell.col or rc1 == rel_cells[0].col) and (rc2 == cell.col or rc2 == rel_cells[0].col)):
+                            print('Cells ' + str(cell.cell_id) + ', ' + str(rel_cells[0].cell_id) + ', ' + str(rel_cells_2[0].cell_id) + ', and ' + str(rel_cells_2[1].cell_id) + ' form an x-wing, thus ' + str(val) + ' cannot be in any other cells of columns ' + str(cell.col) + ' or ' + str(rel_cells[0].col))
+                            # Apply x-wing logic
+                            # For all cells in columns a and b that arent the cells of interest, remove value from possible values 
+                            for c in col1.cells:
+                                if (c == cell or c == rel_cells_2[0] or c == rel_cells[0] or c == rel_cells_2[1]):
+                                    continue
+                                try:
+                                    c.possible_values.remove(val)
+                                    print('Removed ' + str(val) + ' from cell ' + str(c.cell_id))
+                                except ValueError:
+                                    continue
+                            for c in col2.cells:
+                                if (c == cell or c == rel_cells_2[0] or c == rel_cells[0] or c == rel_cells_2[1]):
+                                    continue
+                                try:
+                                    c.possible_values.remove(val)
+                                    print('Removed ' + str(val) + ' from cell ' + str(c.cell_id))
+                                except ValueError:
+                                    continue
+                            break                   
+                                                     
     
     def solve_cell(self, cell): 
         if (np.isnan(cell.value) == False):
@@ -509,9 +397,6 @@ class grid:
             self.object_cell_exclusions(cell, col, 'column')
         if (len(cell.possible_values) != 1):
             self.object_cell_exclusions(cell, box, 'box')
-            
-#        if (len(cell.possible_values) != 1): # Have a different function for this so it can be more interpretable (in case first one fails) 
-#            self.grid_cell_exclusions(cell, box)
 
         if (len(cell.possible_values) != 1):
             self.multi_cell_compare(cell, row, 'row')
@@ -525,8 +410,8 @@ class grid:
 
         if (len(cell.possible_values) != 1):
             self.x_wing(cell, row, 'row')
-        if (len(cell.possible_values) != 1):
-            self.x_wing(cell, col, 'col')
+#        if (len(cell.possible_values) != 1):
+#            self.x_wing(cell, col, 'col')
 
         # If only 1 possible number, set cell value as that, and update row, col, and box possibilities, and remove from solved cells. 
         # otherwise, continue
@@ -647,15 +532,15 @@ n = np.nan
 #                       [n,n,n,n,9,2,n,n,n],
 #                       [n,2,n,n,n,4,1,6,n]]) 
     
-input_grid = np.array([[1,n,n,n,n,n,5,6,9], # Current test on phone. Need to implement and understand X wing strategy first. Will practice with other puzzles. 
-                       [4,9,2,n,5,6,1,n,8], # If the 7 at the end of this row was absent, it is not capable of solving for it, yet I could determine that was either 1 or 7 based on the other cells. Still needs some work!
-                       [n,5,6,1,n,9,2,4,n],
-                       [n,n,9,6,4,n,8,n,1],
-                       [n,6,4,n,1,n,n,n,n],
-                       [2,1,8,n,3,5,6,n,4],
-                       [n,4,n,5,n,n,n,1,6],
-                       [9,n,5,n,6,1,4,n,2],
-                       [6,2,1,n,n,n,n,n,5]])
+input_grid = np.array([[n,n,5,4,n,n,6,n,2], # Current test on phone. Need to implement and understand X wing strategy first. Will practice with other puzzles. 
+                       [n,n,6,n,2,n,1,5,n], # If the 7 at the end of this row was absent, it is not capable of solving for it, yet I could determine that was either 1 or 7 based on the other cells. Still needs some work!
+                       [2,9,3,5,6,1,7,8,4],
+                       [n,5,2,3,n,4,8,n,n],
+                       [3,n,1,2,n,6,4,n,5],
+                       [n,n,n,n,5,7,3,2,n],
+                       [n,3,n,n,4,2,5,6,n],
+                       [n,2,4,n,n,5,9,n,n],
+                       [5,n,7,n,n,9,2,4,n]])
     
 game_grid = process_starting_input(input_grid)
 iter_count = 1
@@ -669,7 +554,7 @@ while True:
     cls()
     print('Completed iteration # ' + str(iter_count))
     iter_count += 1
-    # Check if it has been solved or notf
+    # Check if it has been solved or not
     if (len(game_grid.unsolved_cells) == 0):
         print('Congratulations! The program was able to solve this Sudoku puzzle')
         break
