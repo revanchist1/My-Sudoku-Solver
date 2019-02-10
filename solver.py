@@ -316,8 +316,6 @@ class grid:
                         continue
                     if((val in col1.cells[r].possible_values == False) or (val in col2.cells[r].possible_values == False)): # If either cell cannot hold the value of interest 
                         continue 
-                        #print('Now checking row ' + str(r+1) + ' for value: ' + str(val))
-        
         
                       # If we pass the three conditions above, then we know we have a 2nd row where we might be able to identify an x wing 
                       # Next step is to check the cells in the 2nd row, and see if the value of interest can only appear in two places 
@@ -329,9 +327,18 @@ class grid:
                     for rc in row2.cells:
                         if (np.isnan(rc.value) == False):
                             continue
+                        
+                        row_imp = self.rows[rc.row-1].impossible_values
+                        col_imp = self.cols[rc.col-1].impossible_values
+                        box_imp = self.boxes[rc.box-1].impossible_values
+                        
+                        if (val in row_imp or val in col_imp or val in box_imp):
+                            continue
+                        
                         if(val in rc.possible_values):
                             val_count_2 += 1
                             rel_cells_2.append(rc)
+                            # I first need to update rc possible values based on other things in the column. 
                                                         
                     if (val_count_2 == 2): # I need to make sure the columns were the same 
                         # For every cell in column 1 and column 2, except for cell, obj_cell, rel_cells_2[0] and rel_cells_2[1]
@@ -351,6 +358,8 @@ class grid:
                                 try:
                                     c.possible_values.remove(val)
                                     print('Removed ' + str(val) + ' from cell ' + str(c.cell_id))
+                                    if(len(c.possible_values) == 1):
+                                        self.solve_cell(c)
                                 except ValueError:
                                     continue
                             for c in col2.cells:
@@ -359,6 +368,8 @@ class grid:
                                 try:
                                     c.possible_values.remove(val)
                                     print('Removed ' + str(val) + ' from cell ' + str(c.cell_id))
+                                    if(len(c.possible_values) == 1):
+                                        self.solve_cell(c)
                                 except ValueError:
                                     continue
                             break                   
@@ -511,27 +522,7 @@ def process_starting_input(inp):
     return the_grid                
 
 # Step 1. Read in puzzle, and fill in rows, grids, and cells. 
-n = np.nan
-#input_grid = np.array([[n,n,8,2,n,n,9,n,3],   # Case # 1 Tested
-#                       [3,4,2,n,9,5,n,n,7],
-#                       [1,9,7,n,n,n,n,n,4],
-#                       [n,n,5,3,1,2,4,7,9],
-#                       [n,n,n,n,n,n,n,n,n],
-#                       [2,n,n,n,7,4,5,n,n],
-#                       [n,2,n,n,n,1,n,n,5],
-#                       [n,7,n,n,n,6,8,9,1],
-#                       [8,n,n,4,3,n,7,n,6]]) 
-
-#input_grid = np.array([[n,5,n,n,n,n,n,3,8], # Current test on phone. Need to implement and understand X wing strategy first. Will practice with other puzzles. 
-#                       [n,n,n,n,2,8,n,n,n], # If the 7 at the end of this row was absent, it is not capable of solving for it, yet I could determine that was either 1 or 7 based on the other cells. Still needs some work!
-#                       [n,n,4,n,n,n,n,n,n],
-#                       [n,n,n,3,5,1,n,8,n],
-#                       [8,n,n,n,6,n,7,n,n],
-#                       [n,n,n,n,n,n,n,1,n],
-#                       [7,n,3,n,n,n,9,n,n],
-#                       [n,n,n,n,9,2,n,n,n],
-#                       [n,2,n,n,n,4,1,6,n]]) 
-    
+n = np.nan    
 input_grid = np.array([[n,n,5,4,n,n,6,n,2], # Current test on phone. Need to implement and understand X wing strategy first. Will practice with other puzzles. 
                        [n,n,6,n,2,n,1,5,n], # If the 7 at the end of this row was absent, it is not capable of solving for it, yet I could determine that was either 1 or 7 based on the other cells. Still needs some work!
                        [2,9,3,5,6,1,7,8,4],
