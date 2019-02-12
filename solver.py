@@ -293,7 +293,119 @@ class grid:
                     print(str(rel_cell.cell_id) + ' possible values: ' + str(rel_cell.temporary_possible_values))
                     rel_cell.temporary_possible_values = [1,2,3,4,5,6,7,8,9] # Reset temporary possible values for now
                 return        
+    
+    def dual_x_wing(self, cell, obj, obj_name):
+        #Row case: Only two possible positions for the same value in two rows, and they are each in the same column 
+        #Col case: Only two possible positions for the same value in two cols, and they are each in the same row 
+        
+        for val in cell.possible_values: 
+            val_count = 1
+            rel_cells = []
+            for obj_cell in obj.cells:
+                if (val_count >= 3):
+                    break
+                if (np.isnan(obj_cell.value) == False or cell == obj_cell):
+                    continue 
+                if (val in obj_cell.possible_values):
+                    val_count += 1
+                    rel_cells.append(obj_cell)
+                    
+            if (len(rel_cells) == 1): 
+                # If obj_name = rows, I need to select columns 
+                # If obj_name = cols, I need to select rows
+                obj1 = None
+                obj2 = None
                 
+                if (obj_name == 'row'):
+                    obj1 = self.cols[cell.col-1]
+                    obj2 = self.cols[rel_cells[0].col-1]
+                else:
+                    obj1 = self.rows[cell.row-1]
+                    obj2 = self.rows[rel_cells[0].row-1]
+                
+                for i in range(0,9):  # Check the rows/cols in the puzzle
+                    if (obj1.cells[i] == cell): # If we are in the row/col we just checked 
+                        continue
+                    if((np.isnan(obj1.cells[i].value) == False or np.isnan(obj2.cells[i].value) == False)): # If either cell already has a value
+                        continue
+                    if((val in obj1.cells[i].possible_values == False) or (val in obj2.cells[i].possible_values == False)): # If either cell cannot hold the value of interest 
+                        continue 
+                    
+                    # If we pass the three conditions above, then we know we have a 2nd row where we might be able to identify an x wing 
+                    # Next step is to check the cells in the 2nd row, and see if the value of interest can only appear in two places 
+                    
+                    alt_obj = None 
+                    
+                    if (obj_name == 'row'):
+                        alt_obj = self.rows[i]
+                    else:
+                        alt_obj = self.cols[i]
+                    
+                    val_count_2 = 0
+                    rel_cells_2 = []
+                    
+                    for c in alt_obj.cells:
+                        if (np.isnan(c.value) == False):
+                            continue
+                        
+                        row_imp = self.rows[c.row-1].impossible_values
+                        col_imp = self.cols[c.col-1].impossible_values
+                        box_imp = self.boxes[c.box-1].impossible_values
+                        
+                        if (val in row_imp or val in col_imp or val in box_imp):
+                            continue
+                        if (val in c.possible_values):
+                            val_count_2 += 1
+                            rel_cells_2.append(c)
+                            
+                    if (val_count_2 == 2):
+                        
+                        # Row case: Check if the columns of the two cells of interest are the same as the columns from the first row 
+                        # Col case: Check if the rows fo the two cells of interest are the samee as the rows from the first column
+                        
+                        x_wing_found = False
+                        
+                        if (obj_name == 'row'):
+                            rc1 = rel_cells_2[0].cell_id[1]
+                            rc2 = rel_cells_2[1].cell_id[1]
+                            
+                            if ((rc1 == cell.col or rc1 == rel_cells[0].col) and (rc2 == cell.col or rc2 == rel_cells[0].col)):
+                                print('Cells ' + str(cell.cell_id) + ', ' + str(rel_cells[0].cell_id) + ', ' + str(rel_cells_2[0].cell_id) + ', and ' + str(rel_cells_2[1].cell_id) + ' form an x-wing, thus ' + str(val) + ' cannot be in any other cells of columns ' + str(cell.col) + ' or ' + str(rel_cells[0].col))
+                                x_wing_found = True    
+                        else:
+                            rc1 = rel_cells_2[0].cell_id[0]
+                            rc2 = rel_cells_2[1].cell_id[0]
+
+                            if ((rc1 == cell.row or rc1 == rel_cells[0].row) and (rc2 == cell.row or rc2 == rel_cells[0].row)):
+                                print('Cells ' + str(cell.cell_id) + ', ' + str(rel_cells[0].cell_id) + ', ' + str(rel_cells_2[0].cell_id) + ', and ' + str(rel_cells_2[1].cell_id) + ' form an x-wing, thus ' + str(val) + ' cannot be in any other cells of rows ' + str(cell.row) + ' or ' + str(rel_cells[0].row))
+                                x_wing_found = True             
+                                
+                        if (x_wing_found == True):
+                            for c in obj1.cells:
+                                if (c == cell or c == rel_cells_2[0] or c==rel_cells[0] or c == rel_cells_2[1]):
+                                    continue
+                                try:
+                                    c.possible_values.remove(val)
+                                    print('Removed ' + str(val) + ' from cell ' + str(c.cell_id))
+                                    if(len(c.possible_values) == 1):
+                                        self.solve_cell(c)
+                                except ValueError:
+                                    continue
+                                
+                            for c in obj2.cells:
+                                if (c == cell or c == rel_cells_2[0] or c == rel_cells[0] or c == rel_cells_2[1]):
+                                    continue
+                                try:
+                                    c.possible_values.remove(val)
+                                    print('Removed ' + str(val) + ' from cell ' + str(c.cell_id))
+                                    if(len(c.possible_values) == 1):
+                                        self.solve_cell(c)
+                                except ValueError:
+                                    continue
+                            break
+                                
+                        
+                            
     def x_wing(self, cell, obj, obj_name):
         for val in cell.possible_values:            
             val_count = 1
@@ -420,7 +532,9 @@ class grid:
         # Every strategy that comes below this line was learned from: http://www.sudokuwiki.org
 
         if (len(cell.possible_values) != 1):
-            self.x_wing(cell, row, 'row')
+            self.dual_x_wing(cell, row, 'row')
+        if (len(cell.possible_values) != 1):
+            self.dual_x_wing(cell, col, 'col')
 #        if (len(cell.possible_values) != 1):
 #            self.x_wing(cell, col, 'col')
 
@@ -523,15 +637,15 @@ def process_starting_input(inp):
 
 # Step 1. Read in puzzle, and fill in rows, grids, and cells. 
 n = np.nan    
-input_grid = np.array([[n,n,5,4,n,n,6,n,2], # Current test on phone. Need to implement and understand X wing strategy first. Will practice with other puzzles. 
-                       [n,n,6,n,2,n,1,5,n], # If the 7 at the end of this row was absent, it is not capable of solving for it, yet I could determine that was either 1 or 7 based on the other cells. Still needs some work!
-                       [2,9,3,5,6,1,7,8,4],
-                       [n,5,2,3,n,4,8,n,n],
-                       [3,n,1,2,n,6,4,n,5],
-                       [n,n,n,n,5,7,3,2,n],
-                       [n,3,n,n,4,2,5,6,n],
-                       [n,2,4,n,n,5,9,n,n],
-                       [5,n,7,n,n,9,2,4,n]])
+input_grid = np.array([[n,n,3,9,1,n,7,n,n], # Current test on phone. Need to implement and understand X wing strategy first. Will practice with other puzzles. 
+                       [n,n,n,n,n,3,4,n,n], # If the 7 at the end of this row was absent, it is not capable of solving for it, yet I could determine that was either 1 or 7 based on the other cells. Still needs some work!
+                       [1,n,n,n,4,n,n,n,6],
+                       [n,6,n,7,n,n,n,n,n],
+                       [n,n,2,1,n,9,6,n,n],
+                       [n,n,n,n,n,2,n,1,n],
+                       [7,n,n,n,8,n,n,n,3],
+                       [n,n,8,2,n,n,n,n,n],                       
+                       [n,n,5,n,7,1,9,n,n]])
     
 game_grid = process_starting_input(input_grid)
 iter_count = 1
@@ -548,10 +662,12 @@ while True:
     # Check if it has been solved or not
     if (len(game_grid.unsolved_cells) == 0):
         print('Congratulations! The program was able to solve this Sudoku puzzle')
+        self.print_grid()
         break
     elif (game_grid.changed_during_iteration == False):
         print('No changes were made during the previous iteration - no unique solution found')
-        #break
+        self.print_grid()
+        break
     
 # Step 1 - simple logic: For each cell in each row, check row, column and grid, and exclude possibilities. If only 1 left after all 3 checks, assign value, update, and show plot. 
 
