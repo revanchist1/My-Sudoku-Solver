@@ -212,9 +212,9 @@ class grid:
                 
                 self.explain_exclusions(curr_cell, curr_cell.impossible_values, obj_name, item)
                 
-#                print('Comparison cell: ' + str(curr_cell.cell_id))
-#                print('Current cell possible values: ' + str(cell.possible_values))
-#                print('Comparison cell possible values: ' + str(curr_cell.possible_values))
+                print('Comparison cell: ' + str(curr_cell.cell_id))
+                print('Current cell possible values: ' + str(cell.possible_values))
+                print('Comparison cell possible values: ' + str(curr_cell.possible_values))
                 
                 if (cell.possible_values == curr_cell.possible_values):
                     cells_to_ignore.append(curr_cell)
@@ -224,9 +224,9 @@ class grid:
                     #if (curr_cell.multi_cell_excluded == False):
                     cells_to_update.append(curr_cell)
                     cells_to_update_ids.append(curr_cell.cell_id)
-#            print('count: ' + str(count))
-#            print('cells_to_ignore: ' + str(len(cells_to_ignore)))
-#            print('cells_to_ignore_ids: ' + str(cells_to_ignore_ids))
+            print('count: ' + str(count))
+            print('cells_to_ignore: ' + str(len(cells_to_ignore)))
+            print('cells_to_ignore_ids: ' + str(cells_to_ignore_ids))
             
             explanation_string = 'Since cells ' + str(sorted(cells_to_ignore_ids)) + ' can each only contain one of ' + str(cell.possible_values) + ', then cell(s) ' + str(cells_to_update_ids) + ' cannot contain these values.' 
             
@@ -638,14 +638,14 @@ def process_starting_input(inp):
 # Step 1. Read in puzzle, and fill in rows, grids, and cells. 
 n = np.nan    
 input_grid = np.array([[n,n,3,9,1,n,7,n,n], # Current test on phone. Need to implement and understand X wing strategy first. Will practice with other puzzles. 
-                       [n,n,n,n,n,3,4,n,n], # If the 7 at the end of this row was absent, it is not capable of solving for it, yet I could determine that was either 1 or 7 based on the other cells. Still needs some work!
-                       [1,n,n,n,4,n,n,n,6],
-                       [n,6,n,7,n,n,n,n,n],
+                       [n,n,n,n,2,3,4,9,1], # If the 7 at the end of this row was absent, it is not capable of solving for it, yet I could determine that was either 1 or 7 based on the other cells. Still needs some work!
+                       [1,n,9,n,4,7,n,n,6],
+                       [n,6,1,7,n,n,n,n,n],
                        [n,n,2,1,n,9,6,n,n],
-                       [n,n,n,n,n,2,n,1,n],
-                       [7,n,n,n,8,n,n,n,3],
-                       [n,n,8,2,n,n,n,n,n],                       
-                       [n,n,5,n,7,1,9,n,n]])
+                       [n,n,n,n,6,2,n,1,n],
+                       [7,9,n,n,8,5,1,2,3],
+                       [3,1,8,2,9,n,5,n,n],                       
+                       [n,n,5,3,7,1,9,n,n]])
     
 game_grid = process_starting_input(input_grid)
 iter_count = 1
@@ -662,12 +662,12 @@ while True:
     # Check if it has been solved or not
     if (len(game_grid.unsolved_cells) == 0):
         print('Congratulations! The program was able to solve this Sudoku puzzle')
-        self.print_grid()
+        game_grid.print_grid()
         break
-    elif (game_grid.changed_during_iteration == False):
-        print('No changes were made during the previous iteration - no unique solution found')
-        self.print_grid()
-        break
+#    elif (game_grid.changed_during_iteration == False):
+#        print('No changes were made during the previous iteration - no unique solution found')
+#        game_grid.print_grid()
+#        break
     
 # Step 1 - simple logic: For each cell in each row, check row, column and grid, and exclude possibilities. If only 1 left after all 3 checks, assign value, update, and show plot. 
 
